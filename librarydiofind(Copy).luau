@@ -3544,27 +3544,62 @@ function ag:PerformSearch(query)
     end
 
     local tabHasMatch = {}
+    local sectionHasMatch = {} 
+    local elementMatches = {}
+    local currentSectionPerTab = {}
 
+    -- BƯỚC 1: Quét toàn bộ để tìm các phần tử khớp và đánh dấu Section của chúng
     for _,item in SearchIndex do
-        -- Kiểm tra nếu phần tử là Section thì luôn ẩn đi khi đang gõ tìm kiếm
         if item.IsSection then
-            if item.Frame.Visible then
-                item.Frame.Visible = false
-                item.searchHidden = true
+            -- Lưu lại Section gần nhất của Tab này để gán cho các item bên dưới
+            currentSectionPerTab[item.Tab] = item
+            
+            -- Nếu bản thân tên Section khớp với từ khóa tìm kiếm
+            local matched = item.Title:find(q,1,true) ~= nil
+            if matched then
+                elementMatches[item] = true
+                tabHasMatch[item.Tab] = true
+                sectionHasMatch[item] = true
             end
         else
             -- Logic tìm kiếm bình thường cho Toggle, Button, Slider...
             local matched = item.Title:find(q,1,true) ~= nil
                          or item.Kind:find(q,1,true) ~= nil
-            if not matched and item.Frame.Visible then
-                item.Frame.Visible = false
-                item.searchHidden = true
-            elseif matched and item.searchHidden then
+            
+            if matched then
+                elementMatches[item] = true
+                tabHasMatch[item.Tab] = true
+                
+                -- Đánh dấu Section chứa item này là có kết quả, cần được hiển thị
+                local parentSection = currentSectionPerTab[item.Tab]
+                if parentSection then
+                    sectionHasMatch[parentSection] = true
+                end
+            end
+        end
+    end
+
+    -- BƯỚC 2: Cập nhật trạng thái Ẩn/Hiện dựa vào kết quả quét ở Bước 1
+    for _,item in SearchIndex do
+        local shouldBeVisible = false
+        
+        if item.IsSection then
+            -- Section chỉ hiện nếu bản thân nó khớp từ khóa HOẶC có con khớp từ khóa
+            shouldBeVisible = sectionHasMatch[item] == true
+        else
+            -- Phần tử bình thường hiện nếu bản thân nó khớp
+            shouldBeVisible = elementMatches[item] == true
+        end
+
+        if shouldBeVisible then
+            if item.searchHidden or not item.Frame.Visible then
                 item.Frame.Visible = true
                 item.searchHidden = false
             end
-            if matched then
-                tabHasMatch[item.Tab] = true
+        else
+            if not item.searchHidden or item.Frame.Visible then
+                item.Frame.Visible = false
+                item.searchHidden = true
             end
         end
     end
@@ -3586,7 +3621,6 @@ function ag:PerformSearch(query)
         end
     end
 
-    -- Nếu tab hiện tại bị ẩn → tự động chuyển sang tab có kết quả
     if ac and not tabHasMatch[ac] and firstVisible then
         firstVisible:Select()
     end
