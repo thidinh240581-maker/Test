@@ -1401,9 +1401,8 @@ local MobileButton = Minimizer:CreateMobileMinimizer({
 local Tabs = {
     Status = Window:MakeTab({ Title = "Info Discord", Icon = "Info" }), 
     Info = Window:MakeTab({ Title = "Tab Status Server", Icon = "crown" }),
-    Main = Window:MakeTab({ Title = "Tab Farming", Icon = "rbxassetid://7733960981" }),
-    Hop = Window:MakeTab({ Title = "Tab FPS Boost", Icon = "locate" }),
     Settings = Window:MakeTab({ Title = "Tab Setting", Icon = "rbxassetid://7734053495" }),
+    Main = Window:MakeTab({ Title = "Tab Farming", Icon = "rbxassetid://7733960981" }),
     Fish = Window:MakeTab({ Title = "Tab Fishing", Icon = "rbxassetid://127664059821666" }),
     Quests = Window:MakeTab({ Title = "Tab Quest And Item", Icon = "rbxassetid://13075622619" }),
     SeaEvent = Window:MakeTab({ Title = "Tab Sea Event", Icon = "waves" }),
@@ -1415,6 +1414,7 @@ local Tabs = {
     Combat = Window:MakeTab({ Title = "Tab Local Player", Icon = "rbxassetid://13075651575" }),
     Travel = Window:MakeTab({ Title = "Tab Teleport Island", Icon = "locate" }),
     Shop = Window:MakeTab({ Title = "Tab Shopping", Icon = "rbxassetid://6031265976" }),
+    Hop = Window:MakeTab({ Title = "Tab FPS Boost", Icon = "locate" }),
     Misc = Window:MakeTab({ Title = "Tab Miscellaneous", Icon = "rbxassetid://10709783577" })
 }
 
@@ -1752,8 +1752,6 @@ WeaponDropdown = Tabs.Main:AddDropdown({
     Callback = function(Value)
     _G.ChooseWP = Value
 end})
-
-
 spawn(function()
     while task.wait(0.5) do
         pcall(function()
@@ -2451,8 +2449,6 @@ local Sea1_Islands = {
         Mobs = {"Shanda", "Royal Squad", "Royal Soldier"}
     }
 }
-
-
 local Sea2_Islands = {
 
     ["Kingdom of Rose"] = {
@@ -2531,8 +2527,6 @@ local Sea2_Islands = {
         }
     }
 }
-
-
 local Sea3_Islands = {
 
     ["Port Town"] = {
@@ -2623,8 +2617,6 @@ local Sea3_Islands = {
         }
     }
 }
-
-
 if World1 then
     Tabs.Main:AddDropdown({
         Name = "Select Island",
@@ -2669,8 +2661,6 @@ Tabs.Main:AddToggle({
         _G.AutoFarmIsland = Value
     end
 })
-
-
 task.spawn(function()
     while task.wait(0.2) do
         if not _G.AutoFarmIsland then continue end
@@ -2819,8 +2809,6 @@ EliteH = Tabs.Main:AddToggle({
 	Callback = function(Value)
 	_G.FarmEliteH = Value
 end})
-
-
 local function HopServer()
 	local Http = game:GetService("HttpService")
 	local TPS = game:GetService("TeleportService")
@@ -2849,8 +2837,6 @@ local function HopServer()
 		end
 	until not Cursor or foundServer
 end
-
-
 spawn(function()
 	while task.wait(1) do
 		pcall(function()
@@ -3080,8 +3066,6 @@ Callback = function(Value)
   _G.AcceptQuestC = Value
 end
 })
-
-
 CakeSM = Tabs.Main:AddToggle({
     Name = "Auto Summon Cake Prince",
     Description = "",
@@ -3106,8 +3090,6 @@ spawn(function()
         end
     end
 end)
-
-
 Tabs.Main:AddToggle({
     Name = "Auto Dough King [Fully]",
     Default = false,
@@ -3199,8 +3181,6 @@ spawn(function()
         end
     end
 end)
-
-
 Tabs.Main:AddToggle({
     Name = "Auto Farm Dough King + Hop",
     Default = false,
@@ -3208,8 +3188,6 @@ Tabs.Main:AddToggle({
         _G.AutoHop_Dough = Value
     end
 })
-
-
 local function HopServer()
     pcall(function()
         local Http = game:GetService("HttpService")
@@ -3227,8 +3205,6 @@ local function HopServer()
         end
     end)
 end
-
-
 spawn(function()
     while task.wait() do
         if _G.AutoHop_Dough then
@@ -3449,8 +3425,6 @@ spawn(function()
     end
   end
 end)
-
-
 Tabs.Main:AddSection("Tyrant of the Skies")
 
 local TyrantStatus = Tabs.Main:AddParagraph("Boss Spawn", "")
@@ -3642,8 +3616,6 @@ spawn(function()
         end
     end
 end)
-
-
 Tabs.Main:AddSection("Farm Material")
 
 Test = Tabs.Main:AddDropdown({
@@ -3690,8 +3662,6 @@ spawn(function()
     end
   end
 end)
-
-
 Tabs.Main:AddSection("Farm Boss")
 
 		BossDropdown = Tabs.Main:AddDropdown({
@@ -3772,8 +3742,6 @@ FarmBoss = Tabs.Main:AddToggle({
         end)
     end
 })
-
-
 BossQ = Tabs.Main:AddToggle({
     Name = "Accept Quests",
     Description = "",
@@ -4026,13 +3994,55 @@ spawn(function()
     end)
   end
 end)
+Tabs.Settings:AddSection("Settings Config")
+-- Slider
+Tabs.Settings:AddSlider({
+    Name = "Tween Speed",
+    Min = 0,
+    Max = 1000,
+    Default = Settings["Tween Speed"],
+    Callback = function(Value)
+        Settings["Tween Speed"] = Value
+    end
+})
 
+-- Toggles
+Tabs.Settings:AddToggle({
+    Name = "Bypass Teleport",
+    Description = "",
+    Default = Settings["Bypass Teleport"],
+    Callback = function(Value)
+        Settings["Bypass Teleport"] = Value
+    end
+})
 
+Tabs.Settings:AddToggle({
+    Name = "Up Y",
+    Description = "",
+    Default = Settings["Up Y"],
+    Callback = function(Value)
+        Settings["Up Y"] = Value
+    end
+})
 
+Tabs.Settings:AddToggle({
+    Name = "Up Y When Low Health",
+    Description = "",
+    Default = Settings["Up Y When Low Health"],
+    Callback = function(Value)
+        Settings["Up Y When Low Health"] = Value
+    end
+})
 
-
-
-Tabs.Settings:AddSection("Settings / Configure")
+Tabs.Settings:AddToggle({
+    Name = "Same Y",
+    Description = "",
+    Default = Settings["Same Y"],
+    Callback = function(Value)
+        Settings["Same Y"] = Value
+    end
+})
+Tabs.Settings:AddSection("Settings Player")
 
 Initialize = Tabs.Settings:AddToggle({
 Name = "Fast Attack", 
@@ -4454,8 +4464,6 @@ BuyBaitToggle = Tabs.Fish:AddToggle({
         end
     end
 })
-
-
 task.spawn(function()
     while task.wait(2) do
         if _G.AutoBuyBait and _G.SelectedBait then
@@ -4465,8 +4473,6 @@ task.spawn(function()
         end
     end
 end)
-
-
 
 
 FishingToggle = Tabs.Fish:AddToggle({
@@ -4531,8 +4537,6 @@ task.spawn(function()
         end
     end
 end)
-
-
 FishingQ = Tabs.Fish:AddToggle({
 Name = "Auto Quest Fishing", 
 Description = "",
@@ -4540,8 +4544,6 @@ Default = false,
 Callback = function(Value)
     _G.AutoFishingQuest = Value
 end})
-
-
 local Players3 = game:GetService("Players")
 local LocalPlayer3 = Players3.LocalPlayer
 local ReplicatedStorage3 = game:GetService("ReplicatedStorage")
@@ -4566,8 +4568,6 @@ task.spawn(function()
         end
     end
 end)
-
-
 QuestToggle = Tabs.Fish:AddToggle({
     Name = "Auto Complete Quest",
     Description = "",
@@ -4582,8 +4582,6 @@ QuestToggle = Tabs.Fish:AddToggle({
         end
     end
 })
-
-
 task.spawn(function()
     while task.wait(5) do 
         if _G.AutoQuestComplete then
@@ -4593,8 +4591,6 @@ task.spawn(function()
         end
     end
 end)
-
-
 SellFishToggle = Tabs.Fish:AddToggle({
     Name = "Auto Sell Fish",
     Description = "",
@@ -4609,8 +4605,6 @@ SellFishToggle = Tabs.Fish:AddToggle({
         end
     end
 })
-
-
 task.spawn(function()
     while task.wait(5) do 
         if _G.AutoSellFish then
@@ -4620,8 +4614,6 @@ task.spawn(function()
         end
     end
 end)
-
-
 SpamSkillZ = Tabs.Fish:AddToggle({
 Name = "Auto Spam Skill Z", 
 Description = "",
@@ -4629,8 +4621,6 @@ Default = false,
 Callback = function(Value)
     _G.AutoSkillZ = Value
 end})
-
-
 local ReplicatedStorage4 = game:GetService("ReplicatedStorage")
 local RFJobToolAbilities4 = ReplicatedStorage4.Modules.Net:WaitForChild("RF/JobToolAbilities")
 
@@ -6329,8 +6319,6 @@ spawn(function()
   end
 end)
 
-
-
 Bartilo = Tabs.Quests:AddToggle({
 Name = "Auto Done Bartilo Quest", 
 Description = "", 
@@ -6471,10 +6459,6 @@ spawn(function()
     end
   end
 end)
-
-
-
-
 
 
 Tabs.Quests:AddSection("Fighting Melee Styles")
@@ -6728,8 +6712,6 @@ spawn(function()
   end
 end)
 
-
-
 Tabs.Race:AddSection("Mystic Island / Full Moon")
 local FullMOOn = Tabs.Race:AddParagraph("FullMoon Status", "")
 local Ismirage = Tabs.Race:AddParagraph("Mirage Island Status", "")
@@ -6968,8 +6950,6 @@ spawn(function()
     end
   end
 end)
-
-
 Tabs.Race:AddButton({
 Name = "Talk With Stone", 
 Description = "",
@@ -7195,8 +7175,6 @@ spawn(function()
     end)
   end
 end)
-
-
 Tabs.Race:AddSection("Trials Quest V4")
 local CheckTier = Tabs.Race:AddParagraph("Tiers V4 Status", "")
 spawn(function()
@@ -7904,8 +7882,6 @@ Tabs.Prehistoric:AddButton({
         game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(unpack(args))
     end
 })
-
-
 Tabs.Prehistoric:AddSection("Prehistoric Island")
 local Check_Volcano = Tabs.Prehistoric:AddParagraph("Prehistoric Island Status", "")
 spawn(function()
@@ -7954,8 +7930,6 @@ task.spawn(function()
         end
     end
 end)
-
-
 
 Tabs.Prehistoric:AddToggle({
     Name = "Auto Find Prehistoric Island",
@@ -8078,8 +8052,6 @@ spawn(function()
 end)
 
 
-
-
 Tabs.Prehistoric:AddToggle({
     Name = "Auto Patch Prehistoric Event",
     Description = "",
@@ -8088,8 +8060,6 @@ Tabs.Prehistoric:AddToggle({
         _G.Prehis_Skills = Value
     end
 })
-
-
 
 spawn(function()
     while task.wait(0.3) do
@@ -8141,8 +8111,6 @@ spawn(function()
         end
     end
 end)
-
-
 spawn(function()
     while task.wait(Sec) do
         if _G.Prehis_Skills then
@@ -8284,8 +8252,6 @@ end)
 Tabs.SeaEvent:AddSection("Sea Event / Setting Sail")
 local ListSeaBoat={"Guardian","PirateGrandBrigade","MarineGrandBrigade","PirateBrigade","MarineBrigade","PirateSloop","MarineSloop","Beast Hunter"}
 local ListSeaZone={"Lv 1","Lv 2","Lv 3","Lv 4","Lv 5","Lv 6","Lv Infinite"}
-
-
 Tabs.SeaEvent:AddButton({
     Name = "Remove Lighting Effect",
     Callback = function()
@@ -8370,8 +8336,6 @@ spawn(function()
 end)
 
 Tabs.SeaEvent:AddSection("Crafting Items")
-
-
 Tabs.SeaEvent:AddButton({
 Name = "Craft SharkTooth", 
 Description = "",
@@ -8971,8 +8935,6 @@ Default = false,
 Callback = function(Value)
   _G.Leviathan1 = Value
 end})
-
-
 Tabs.Esp:AddSection("Esp")
 
 function isnil(thing)
@@ -8982,13 +8944,9 @@ local function round(n)
     return math.floor(tonumber(n) + 0.5)
 end
 Number = math.random(1, 1000000)
-
-
 local plr = game:GetService('Players').LocalPlayer
 local replicated = game:GetService("ReplicatedStorage")
 local TeamSelf = plr.Team
-
-
 EspPly = function()
     for _,v in next, game.Players:GetChildren() do
         pcall(function()
@@ -9029,8 +8987,6 @@ EspPly = function()
         end)
     end
 end
-
-
 LocationEsp = function() 
     for _,v in next, workspace["_WorldOrigin"].Locations:GetChildren() do
         pcall(function()
@@ -9065,8 +9021,6 @@ LocationEsp = function()
         end)
     end
 end
-
-
 DevEsp = function()
     for i,v in next, workspace:GetChildren() do
         pcall(function()
@@ -9101,8 +9055,6 @@ DevEsp = function()
         end)
     end
 end
-
-
 flowerEsp = function()
     for i,v in pairs(workspace:GetChildren()) do
         pcall(function()
@@ -9141,8 +9093,6 @@ flowerEsp = function()
         end)
     end
 end
-
-
 EventIslandEsp = function()
     for i, v in pairs(workspace._WorldOrigin.Locations:GetChildren()) do
         pcall(function()
@@ -9177,8 +9127,6 @@ EventIslandEsp = function()
         end)
     end
 end
-
-
 gearEsp = function()
     for _,v in pairs(workspace.Map.MysticIsland:GetDescendants()) do
         pcall(function()
@@ -9213,8 +9161,6 @@ gearEsp = function()
         end)
     end
 end
-
-
 AdvanFruitEsp = function()
     if advanEsp then     
         for _,v in pairs(replicated.NPCs:GetChildren()) do
@@ -9258,8 +9204,6 @@ AdvanFruitEsp = function()
         end    
     end
 end
-
-
 HakiClorEsp = function()
     if ColorEsp then     
         for _,v in pairs(replicated.NPCs:GetChildren()) do
@@ -9303,8 +9247,6 @@ HakiClorEsp = function()
         end    
     end
 end
-
-
 LegenSword = function()
     if LegenS then     
         for _,v in pairs(replicated.NPCs:GetChildren()) do
@@ -9348,8 +9290,6 @@ LegenSword = function()
         end    
     end
 end
-
-
 ChestEsp = function()
     if ChestESP then
         local CollectionService = game:GetService("CollectionService")
@@ -9404,8 +9344,6 @@ ChestEsp = function()
         end
     end
 end
-
-
 berriesEsp = function()
     if BerryEsp then
         local CollectionService = game:GetService("CollectionService")
@@ -9465,8 +9403,6 @@ berriesEsp = function()
         end
     end
 end
-
-
 Tabs.Esp:AddToggle({
     Name = "Esp Berry",
     Description = "",
@@ -9797,8 +9733,6 @@ end)
 pcall(function()
     stockParagraph:SetDesc(getFruitStock())
 end)
-
-
 RandomFF = Tabs.Raids:AddToggle({
 Name = "Auto Random Fruit", 
 Description = "", 
@@ -9979,8 +9913,6 @@ Callback = function()
     end    
   end
 end})
-
-
 AutoChipBeli = Tabs.Raids:AddToggle({
     Name = "Auto Buy Chip [Beli]",
     Description = "",
@@ -10001,8 +9933,6 @@ task.spawn(function()
         end
     end
 end)
-
-
 AutoChipFruit = Tabs.Raids:AddToggle({
     Name = "Auto Buy Chip [Devil Fruit]",
     Description = "",
@@ -10034,8 +9964,6 @@ task.spawn(function()
         end
     end
 end)
-
-
 StartR = Tabs.Raids:AddToggle({
     Name = "Auto Start Raid",
     Description = "",
@@ -10112,8 +10040,6 @@ spawn(function()
         local hum = char:FindFirstChildOfClass("Humanoid")
         if not root or not hum or hum.Health <= 0 then continue end
         if hum.Sit or hum.PlatformStand or root.Anchored then continue end
-
-
         local closestDist = 999999
         for _,name in ipairs(islands) do
             local loc = locations:FindFirstChild(name)
@@ -10129,8 +10055,6 @@ spawn(function()
         if not currentIsland then continue end
         local islandPos = locations:FindFirstChild(currentIsland)
         if not islandPos then continue end
-
-
         local foundEnemies = false
         for _,mob in ipairs(workspace.Enemies:GetChildren()) do
             local eh = mob:FindFirstChild("Humanoid")
@@ -10145,8 +10069,6 @@ spawn(function()
                 end
             end
         end
-
-
         if not foundEnemies then
             local idx = table.find(islands, currentIsland)
             if idx and islands[idx+1] then
@@ -10325,8 +10247,6 @@ spawn(function()
         end)
     end
 end)
-
-
 Tabs.Raids:AddToggle({
     Name = "TP Exit (1)",
     Default = false,
@@ -10334,8 +10254,6 @@ Tabs.Raids:AddToggle({
         _G.TPFloor1 = v
     end
 })
-
-
 local tp1Done = false
 
 local function GetCurrentFloor()
@@ -10494,10 +10412,6 @@ task.spawn(function()
     end
 end)
 
-
-
-
-
 Tabs.Combat:AddSection("Combat / AimBot")
 
 local __indexPlayer = Tabs.Combat:AddParagraph("All Players On Server", "")
@@ -10542,8 +10456,6 @@ spawn(function()
         end)
     end
 end)
-
-
 local PlrList = {}   
 for _, v in pairs(game:GetService("Players"):GetChildren()) do
     table.insert(PlrList, v.Name)
@@ -10703,8 +10615,6 @@ Tabs.Combat:AddToggle({
         _G.AutoReceivePlayerQuest = Value
     end
 })
-
-
 spawn(function()
     while task.wait(1) do
         if _G.AutoReceivePlayerQuest then
@@ -10714,8 +10624,6 @@ spawn(function()
         end
     end
 end)
-
-
 Tabs.Combat:AddToggle({
     Name = "Auto Kill Player Quest", 
     Default = false,
@@ -10757,10 +10665,6 @@ spawn(function()
     end
 end)
 
-
-
-
-
 Tabs.Combat:AddToggle({
     Name = "Auto Enable PvP",
     Description = "",
@@ -10769,8 +10673,6 @@ Tabs.Combat:AddToggle({
         _G.AutoPvP = Value
     end
 })
-
-
 spawn(function()
     while task.wait(0.5) do
         if _G.AutoPvP then
@@ -10972,8 +10874,6 @@ player.CharacterAdded:Connect(function(character)
         toggleFly(true)
     end
 end)
-
-
 Tabs.Combat:AddToggle({
     Name = "Enable Fly",
     Default = false,
@@ -11107,8 +11007,6 @@ spawn(function()
         end
     end
 end)
-
-
 Tabs.Travel:AddSection("Travel - Worlds")
 
 Tabs.Travel:AddButton({
@@ -11363,8 +11261,6 @@ Description = "",
 Callback = function()
   replicated.Remotes.CommF_:InvokeServer("Ectoplasm","Buy", 2)
 end})
-
-
 
 Tabs.Shop:AddSection("Weapon World1")
 Tabs.Shop:AddButton({
@@ -11902,8 +11798,6 @@ Callback = function(Value)
   end  
 end
 })
-
-
 DayN = Tabs.Misc:AddDropdown({
 Name = "Select Time",
 Description = "",
@@ -11915,7 +11809,7 @@ end})
 dayornight = Tabs.Misc:AddToggle({
 Name = "Turn on Time", 
 Description = "", 
-Default = false,
+Default = Day,
 Callback = function(Value)
   _G.daylightN = Value
 end})
