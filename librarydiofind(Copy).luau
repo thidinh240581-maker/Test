@@ -1134,7 +1134,7 @@ Size=UDim2.fromScale(0,1),
 Position=UDim2.fromScale(0.5,0.5),
 AnchorPoint=Vector2.new(0.5,0.5),
 Visible=false,
-PlaceholderText="Search...",
+PlaceholderText="Search Section And Function",
 ClearTextOnFocus=false,
 Text="",
 Elements={
@@ -1577,41 +1577,49 @@ end
 end
 
 function ah:AddSection(av)
-assert(av==nil or type(av)=="string",`"Tab.AddSection[param 1]". 'string', or 'nil' expected, got {typeof(av)}`)
-av=av or""
+    assert(av==nil or type(av)=="string",`"Tab.AddSection[param 1]". 'string', or 'nil' expected, got {typeof(av)}`)
+    av=av or""
 
-local aw=V[self]
+    local aw=V[self]
 
-local ax=E("Frame","Option",T[self].Container,{
-Size=UDim2.new(1,0,0,20),
-BackgroundTransparency=1
-})
+    local ax=E("Frame","Option",T[self].Container,{
+        Size=UDim2.new(1,0,0,20),
+        BackgroundTransparency=1
+    })
 
-local ay=E("TextLabel",ax,{
-TextXAlignment=Enum.TextXAlignment.Left,
-TextTruncate=Enum.TextTruncate.AtEnd,
-Size=UDim2.new(1,-25,1,0),
-Position=UDim2.new(0,5),
-BackgroundTransparency=1,
-TextSize=17,
-Text=av,
-ThemeTag={
-OBJECTS=aw,
-TextColor3="Colors.Text.Default",
-Font="Font.Bold"
-}
-})
+    local ay=E("TextLabel",ax,{
+        TextXAlignment=Enum.TextXAlignment.Left,
+        TextTruncate=Enum.TextTruncate.AtEnd,
+        Size=UDim2.new(1,-25,1,0),
+        Position=UDim2.new(0,5),
+        BackgroundTransparency=1,
+        TextSize=17,
+        Text=av,
+        ThemeTag={
+            OBJECTS=aw,
+            TextColor3="Colors.Text.Default",
+            Font="Font.Bold"
+        }
+    })
 
-return setmetatable({
-Title=av,
+    local obj = setmetatable({
+        Title=av,
+        DESTROY_ELEMENT=ax,
+        VISIBLE_ELEMENT=ax,
+        TITLE_LABEL=ay,
+        Kind="Section",
+        Parent=self
+    },ai)
 
-DESTROY_ELEMENT=ax,
-VISIBLE_ELEMENT=ax,
-TITLE_LABEL=ay,
+    table.insert(SearchIndex, {
+        Title = av:lower():gsub("[%s%p%c]",""), 
+        Kind = "section", 
+        Tab = self, 
+        Frame = ax, 
+        IsSection = true
+    }) 
 
-Kind="Section",
-Parent=self
-},ai)
+    return obj
 end
 
 function ah:AddToggle(av)
@@ -3519,55 +3527,64 @@ ag.Notificafion=ag.Notify
 function ag:PerformSearch(query)
     local q = query:lower():gsub("[%s%p%c]","")
 
-if q == "" then
-    for _,item in SearchIndex do
-        if item.searchHidden then
-            item.Frame.Visible = true
-            item.searchHidden = false
+    if q == "" then
+        for _,item in SearchIndex do
+            if item.searchHidden then
+                item.Frame.Visible = true
+                item.searchHidden = false
+            end
         end
-    end
-    for _,tab in S do
-        if tabHiddenState[tab] then
-            T[tab].SelectTabButton.Visible = true
-           tabHiddenState[tab] = nil
+        for _,tab in S do
+            if tabHiddenState[tab] then
+                T[tab].SelectTabButton.Visible = true
+               tabHiddenState[tab] = nil
+            end
         end
+        return
     end
-    return
-end
 
     local tabHasMatch = {}
 
-for _,item in SearchIndex do
-    local matched = item.Title:find(q,1,true) ~= nil
-                 or item.Kind:find(q,1,true) ~= nil
-    if not matched and item.Frame.Visible then
-        item.Frame.Visible = false
-        item.searchHidden = true
-    elseif matched and item.searchHidden then
-        item.Frame.Visible = true
-        item.searchHidden = false
+    for _,item in SearchIndex do
+        -- Kiểm tra nếu phần tử là Section thì luôn ẩn đi khi đang gõ tìm kiếm
+        if item.IsSection then
+            if item.Frame.Visible then
+                item.Frame.Visible = false
+                item.searchHidden = true
+            end
+        else
+            -- Logic tìm kiếm bình thường cho Toggle, Button, Slider...
+            local matched = item.Title:find(q,1,true) ~= nil
+                         or item.Kind:find(q,1,true) ~= nil
+            if not matched and item.Frame.Visible then
+                item.Frame.Visible = false
+                item.searchHidden = true
+            elseif matched and item.searchHidden then
+                item.Frame.Visible = true
+                item.searchHidden = false
+            end
+            if matched then
+                tabHasMatch[item.Tab] = true
+            end
+        end
     end
-    if matched then
-        tabHasMatch[item.Tab] = true
-    end
-end
 
     -- Ẩn/hiện nút tab bên trái
     local firstVisible = nil
-for _,tab in S do
-    local visible = tabHasMatch[tab] == true
-    local btn = T[tab].SelectTabButton
-    if not visible and btn.Visible then
-        btn.Visible = false
-        tabHiddenState[tab] = true
+    for _,tab in S do
+        local visible = tabHasMatch[tab] == true
+        local btn = T[tab].SelectTabButton
+        if not visible and btn.Visible then
+            btn.Visible = false
+            tabHiddenState[tab] = true
         elseif visible and tabHiddenState[tab] then
-    btn.Visible = true
-    tabHiddenState[tab] = nil
+            btn.Visible = true
+            tabHiddenState[tab] = nil
+        end
+        if visible and not firstVisible then
+            firstVisible = tab
+        end
     end
-    if visible and not firstVisible then
-        firstVisible = tab
-    end
-end
 
     -- Nếu tab hiện tại bị ẩn → tự động chuyển sang tab có kết quả
     if ac and not tabHasMatch[ac] and firstVisible then
@@ -4147,11 +4164,11 @@ local searchInput = E("TextBox", "SearchBar", searchInputBg, {
     Size = UDim2.new(1, -25, 1, 0), -- Chiều rộng trừ đi khoảng trống cho Icon
     Position = UDim2.new(0, 8, 0, 0), -- Cách lề trái 8px
     BackgroundTransparency = 1,
-    PlaceholderText = "Search...",
+    PlaceholderText = "Search Section and Function",
     Text = "",
     TextSize = 12,
     TextXAlignment = Enum.TextXAlignment.Left,
-    ClearTextOnFocus = false,
+    ClearTextOnFocus = true, 
     ThemeTag = {
         TextColor3 = "Colors.Text.Default",
         PlaceholderColor3 = "Colors.Text.Darker",
