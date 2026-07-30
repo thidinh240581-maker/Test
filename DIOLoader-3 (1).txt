@@ -950,88 +950,134 @@ end
 
 _tp = function(target)
     local gg
-    if typeof(target) == "Vector3" then
+    local t = typeof(target)
+    if t == "Vector3" then
         gg = CFrame.new(target)
-    elseif typeof(target) == "CFrame" then
+    elseif t == "CFrame" then
         gg = target
-    else
-        gg = target and target.CFrame
+    elseif target then
+        gg = target.CFrame
     end
-    
     if not gg then return end
-    
+
     local character = plr.Character
-    if not character or not character:FindFirstChild("HumanoidRootPart") then return end
-    local rootPart = character.HumanoidRootPart
-    
+    if not character then return end
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
+    local humanoid  = character:FindFirstChild("Humanoid")
+    if not rootPart or not humanoid then return end
+
     pcall(function()
         if CanBypassTeleport(gg) then
             BypassTP(gg)
             task.wait(0.5)
         end
     end)
-    
-    pcall(function()
-        requestentrance(target)
-    end)
-    
+
+    pcall(function() requestentrance(target) end)
+
     if sea3 and getdis(gg.Position, newdao.Position) < 2000 then
-        local hrp = plr.Character.HumanoidRootPart
-        if math.abs(newdao.Position.Y - hrp.CFrame.Y) > 1000 then
+        if math.abs(newdao.Position.Y - rootPart.Position.Y) > 1000 then
             repeat
                 task.wait()
                 old_tp(cframenpc)
-                if getdis(cframenpc) < 10 then
+                if getdis(rootPart.Position, cframenpc.Position) < 10 then
                     local net = game:GetService("ReplicatedStorage").Modules.Net
                     net["RF/SubmarineWorkerSpeak"]:InvokeServer("AskKilledTikiBoss")
                     task.wait(0.5)
                     net["RF/SubmarineWorkerSpeak"]:InvokeServer("TravelToSubmergedIsland")
                 end
-            until getdis(gg.Position) < 2000
+            until getdis(rootPart.Position, gg.Position) < 2000
             task.wait(0.6)
             pcall(function()
-                if hrp:FindFirstChild("BodyClip") then
-                    hrp.BodyClip:Destroy()
-                end
+                local bodyClip = rootPart:FindFirstChild("BodyClip")
+                if bodyClip then bodyClip:Destroy() end
             end)
         end
     end
-    
+
+    if humanoid.Sit then humanoid.Sit = false end
+
     local distance = (gg.Position - rootPart.Position).Magnitude
-    local tweenSpeed = 300 -- Vận tốc Tween mặc định
-    local tweenInfo = TweenInfo.new(distance / tweenSpeed, Enum.EasingStyle.Linear)
-    
-    -- Dùng trực tiếp TweenService vào HumanoidRootPart thay vì dùng "block"
-    local tween = game:GetService("TweenService"):Create(rootPart, tweenInfo, {CFrame = gg})    
-    
-    if character.Humanoid.Sit == true then
-        character.Humanoid.Sit = false -- Buộc nhân vật đứng lên nếu đang ngồi
-    end  
-    
-    tween:Play()    
-    
+    if distance < 0.1 then return end
+
+    local RunService  = game:GetService("RunService")
+    local TweenService = game:GetService("TweenService")
     local camera = workspace.CurrentCamera
-    
-    task.spawn(function() 
-        while tween.PlaybackState == Enum.PlaybackState.Playing do 
-            if not shouldTween then 
-                tween:Cancel() 
-                break 
-            end 
-            
-            -- [CAMERA LOGIC] Ép Camera đi theo HumanoidRootPart mượt mà
-            camera.CameraType = Enum.CameraType.Scriptable
-            local camOffset = rootPart.CFrame * CFrame.new(0, 15, 30) -- Camera cách nhân vật 30 stud, cao 15 stud
-            camera.CFrame = CFrame.lookAt(camOffset.Position, rootPart.Position)
-            
-            task.wait() -- Cập nhật mỗi frame để tránh giật lag
+    local CAM_KEY = "TpCameraFollow_" .. tostring(tick()) -- unique key tránh conflict nếu gọi liên tiếp
+
+    -- =============================================
+    -- FIX GIẬT: Proxy Part
+    -- Tween 1 part ảo (không có physics) thay vì rootPart
+    -- Server/physics không thể "correct" proxy → không giật
+    -- =============================================
+    local proxy = Instance.new("Part")
+    proxy.Anchored    = true
+    proxy.CanCollide  = false
+    proxy.CanTouch    = false
+    proxy.Transparency = 1
+    proxy.Size        = Vector3.one
+    proxy.CFrame      = rootPart.CFrame
+    proxy.Parent      = workspace
+
+    -- Anchor rootPart để server không snap lại trong khi sync
+    local prevAnchored = rootPart.Anchored
+    rootPart.Anchored = true
+
+    local tweenInfo = TweenInfo.new(distance / 300, Enum.EasingStyle.Linear)
+    local tween = TweenService:Create(proxy, tweenInfo, {CFrame = gg})
+
+    -- =============================================
+    -- FIX CAMERA GHIM: BindToRenderStep + Camera priority
+    -- Chạy đúng trước khi frame render → không lag/ghim
+    -- =============================================
+    camera.CameraType = Enum.CameraType.Scriptable
+
+    local isActive = true -- flag chống double-cleanup
+
+    local function cleanup()
+        if not isActive then return end
+        isActive = false
+
+        RunService:UnbindFromRenderStep(CAM_KEY)
+        pcall(function() proxy:Destroy() end)
+
+        rootPart.CFrame   = gg         -- snap chính xác vào đích
+        rootPart.Anchored = prevAnchored
+
+        camera.CameraType   = Enum.CameraType.Custom
+        camera.CameraSubject = humanoid
+    end
+
+    -- Camera priority + 1 đảm bảo chạy SAU khi Roblox update camera mặc định
+    -- → override hoàn toàn, không bị ghi đè
+    RunService:BindToRenderStep(CAM_KEY, Enum.RenderPriority.Camera.Value + 1, function()
+        if not isActive then return end
+
+        -- Dừng nếu bị cancel từ bên ngoài
+        if not shouldTween then
+            tween:Cancel()
+            cleanup()
+            return
         end
-        
-        -- Trả Camera về trạng thái Custom bình thường khi dừng Tween
-        camera.CameraType = Enum.CameraType.Custom
-        camera.CameraSubject = character:FindFirstChild("Humanoid")
+
+        -- Dừng nếu tween đã xong (Completed event có thể fire trước)
+        if tween.PlaybackState ~= Enum.PlaybackState.Playing then
+            cleanup()
+            return
+        end
+
+        -- Sync rootPart theo proxy (mượt, không giật)
+        rootPart.CFrame = proxy.CFrame
+
+        -- Camera follow
+        local camPos = rootPart.CFrame * CFrame.new(0, 15, 30)
+        camera.CFrame = CFrame.lookAt(camPos.Position, rootPart.Position)
     end)
-    
+
+    -- Cleanup khi tween tự hoàn thành
+    tween.Completed:Once(cleanup)
+
+    tween:Play()
     return tween
 end
 
