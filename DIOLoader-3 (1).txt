@@ -257,7 +257,7 @@ end
 local TweenService = game:GetService("TweenService")
 local TweenInfoBring = TweenInfo.new(0.3, Enum.EasingStyle.Linear)
 
-_G.BringRange = _G.BringRange or 240
+_G.BringRange = _G.BringRange or 200
 _G.MaxBringMobs = _G.MaxBringMobs or 6
 
 BringEnemy = function(Mon)
@@ -1385,7 +1385,7 @@ end
 local redzlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/thidinh240581-maker/Test/refs/heads/main/librarydiofind(Copy).luau"))()
 local Window = redzlib:MakeWindow({
     Title = "DIO Hub ",
-    SubTitle = "DIO Remake Script",
+    SubTitle = "DIO Loader Script | Blox Fruit",
     SaveFolder = "dio.json"
 })
 
@@ -1426,8 +1426,8 @@ Tabs.Status:AddDiscordInvite({
 	Banner = "rbxassetid://105848560127717", 
 	Logo = "rbxassetid://105848560127717",
 	Invite = "https://discord.gg/MjGt2bTWBS",
-	Members = 3774, 
-	Online = 1006, 
+	Members = 6767, 
+	Online = 3636,
 })
 Tabs.Status:AddDiscordInvite({
 	Title = "DIO hub | Youtube",
@@ -1435,8 +1435,8 @@ Tabs.Status:AddDiscordInvite({
 	Banner = "rbxassetid://105848560127717", 
 	Logo = "rbxassetid://105848560127717",
 	Invite = "https://www.youtube.com/@dio_plzzz",
-	Members = 3774, 
-	Online = 1006, 
+	Members = 6767,
+	Online = 3636,
 })
 Tabs.Info:AddSection("Status Server")
 
