@@ -948,74 +948,96 @@ function requestentrance(pos)
     end
 end
 
-local TweenService = game:GetService("TweenService")
-local RunService   = game:GetService("RunService")
-local camera       = workspace.CurrentCamera
+local UserInputService = game:GetService("UserInputService")
+local TweenService     = game:GetService("TweenService")
+local RunService       = game:GetService("RunService")
+local camera           = workspace.CurrentCamera
 
--- ─── Snake Camera ─────────────────────────────────────────────────────────────
-local _camConn  -- connection hiện tại
+local _camConn, _inputConn
 
-local CAM_DIST   = 25    -- khoảng lùi sau nhân vật
-local CAM_HEIGHT = 10    -- chiều cao camera
-local CAM_SMOOTH = 0.10  -- độ trễ lerp (thấp hơn → rắn hơn, lag nhiều hơn)
+local CAM_DIST   = 20
+local CAM_HEIGHT = 6
+local STIFFNESS  = 200
+local DAMPING    = 25
+local MOUSE_SENS = 0.25   -- chỉnh độ nhạy chuột ở đây
 
 local function _startSnakeCamera(tween, targetPos)
-    -- Hủy snake camera cũ nếu _tp bị gọi liên tiếp
-    if _camConn then
-        _camConn:Disconnect()
-        _camConn = nil
-    end
+    if _camConn   then _camConn:Disconnect();   _camConn   = nil end
+    if _inputConn then _inputConn:Disconnect(); _inputConn = nil end
 
     local originalType = camera.CameraType
     camera.CameraType  = Enum.CameraType.Scriptable
 
-    local camCF = camera.CFrame
-
     local function cleanup()
-        if _camConn then
-            _camConn:Disconnect()
-            _camConn = nil
-        end
+        if _camConn   then _camConn:Disconnect();   _camConn   = nil end
+        if _inputConn then _inputConn:Disconnect(); _inputConn = nil end
         camera.CameraType = originalType
     end
 
+    local hrp0  = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+    local yaw   = 0
+    local pitch = math.rad(15)  -- góc nhìn xuống nhẹ ban đầu
+
+    -- Snap yaw ban đầu ra phía sau theo hướng di chuyển
+    if hrp0 then
+        local d0 = targetPos - hrp0.Position
+        if d0.Magnitude > 1 then
+            yaw = math.atan2(-d0.X, -d0.Z)
+        end
+    end
+
+    -- Spring state
+    local springPos, springVel, lookPos
+
+    if hrp0 then
+        local offset  = CFrame.fromEulerAnglesYXZ(-pitch, yaw, 0) * Vector3.new(0, 0, CAM_DIST)
+        springPos     = hrp0.Position + offset + Vector3.new(0, CAM_HEIGHT, 0)
+        lookPos       = hrp0.Position + Vector3.new(0, 2, 0)
+        camera.CFrame = CFrame.new(springPos, lookPos)   -- snap ngay frame đầu
+    else
+        springPos = camera.CFrame.Position
+        lookPos   = springPos + camera.CFrame.LookVector * 10
+    end
+    springVel = Vector3.new()
+
+    -- ── Track chuột độc lập với spring → quay 360° không bị cản ──────────
+    _inputConn = UserInputService.InputChanged:Connect(function(input)
+        if input.UserInputType ~= Enum.UserInputType.MouseMovement then return end
+        yaw   = yaw   - math.rad(input.Delta.X * MOUSE_SENS)    -- trái/phải
+        pitch = pitch - math.rad(input.Delta.Y * MOUSE_SENS)    -- lên/xuống
+        pitch = math.clamp(pitch, math.rad(-20), math.rad(85))  -- giới hạn không lật ngược
+    end)
+
+    -- ── RenderStepped: spring chỉ đuổi theo nhân vật, không ảnh hưởng góc ─
     _camConn = RunService.RenderStepped:Connect(function(dt)
-        -- Dừng khi tween kết thúc / bị cancel
         if tween.PlaybackState ~= Enum.PlaybackState.Playing then
-            cleanup()
-            return
+            cleanup(); return
         end
 
-        local char = plr.Character
-        local hrp  = char and char:FindFirstChild("HumanoidRootPart")
+        local hrp = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
         if not hrp then return end
 
         local pPos    = hrp.Position
-        local toGoal  = targetPos - pPos
-        -- Hướng di chuyển; fallback là hướng nhìn của nhân vật
-        local dir = toGoal.Magnitude > 0.5 and toGoal.Unit or -hrp.CFrame.LookVector
+        -- Vị trí camera tính từ góc người dùng đang nhìn, cộng height bias
+        local offset  = CFrame.fromEulerAnglesYXZ(-pitch, yaw, 0) * Vector3.new(0, 0, CAM_DIST)
+        local desired = pPos + offset + Vector3.new(0, CAM_HEIGHT, 0)
 
-        -- Vị trí camera mong muốn: lùi sau + cao hơn nhân vật
-        local desiredCF = CFrame.new(
-            pPos - dir * CAM_DIST + Vector3.new(0, CAM_HEIGHT, 0),
-            pPos + Vector3.new(0, CAM_HEIGHT * 0.25, 0)   -- nhìn hơi lên đầu nhân vật
-        )
+        -- Spring bám theo nhân vật
+        local force   = (desired - springPos) * STIFFNESS - springVel * DAMPING
+        springVel     = springVel + force * dt
+        springPos     = springPos + springVel * dt
 
-        -- Frame-rate independent lerp: mượt đều ở mọi FPS
-        local alpha = 1 - (1 - CAM_SMOOTH) ^ (dt * 60)
-        camCF = camCF:Lerp(desiredCF, alpha)
-        camera.CFrame = camCF
+        -- Look target smooth (không snap cứng khi nhân vật giật)
+        lookPos       = lookPos:Lerp(pPos + Vector3.new(0, 2, 0), 1 - 0.75 ^ (dt * 60))
+        camera.CFrame = CFrame.new(springPos, lookPos)
     end)
 
-    -- Dọn dẹp muộn 0.3s sau khi tween xong để camera kịp "về đích"
     tween.Completed:Once(function()
-        task.delay(0.3, cleanup)
+        task.delay(0.15, cleanup)
     end)
 end
 
-
 _tp = function(target)
-    -- 1. Resolve CFrame
     local gg
     if typeof(target) == "Vector3" then
         gg = CFrame.new(target)
@@ -1026,22 +1048,16 @@ _tp = function(target)
     end
     if not gg then return end
 
-    -- 2. Validate character (cache để dùng lại)
     local character = plr.Character
     if not character then return end
     local rootPart = character:FindFirstChild("HumanoidRootPart")
     if not rootPart then return end
 
-    -- 3. Bypass & entrance
     pcall(function()
-        if CanBypassTeleport(gg) then
-            BypassTP(gg)
-            task.wait(0.5)
-        end
+        if CanBypassTeleport(gg) then BypassTP(gg); task.wait(0.5) end
     end)
     pcall(function() requestentrance(target) end)
 
-    -- 4. Sea3 / submerged island
     if sea3 and getdis(gg.Position, newdao.Position) < 2000 then
         local hrp = character.HumanoidRootPart
         if math.abs(newdao.Position.Y - hrp.CFrame.Y) > 1000 then
@@ -1063,28 +1079,23 @@ _tp = function(target)
         end
     end
 
-    -- 5. Tạo tween
-    local distance   = (gg.Position - rootPart.Position).Magnitude
-    local tweenInfo  = TweenInfo.new(distance / 300, Enum.EasingStyle.Linear)
-    local tween      = TweenService:Create(block, tweenInfo, {CFrame = gg})
+    local distance = (gg.Position - rootPart.Position).Magnitude
+    local tween    = TweenService:Create(
+        block,
+        TweenInfo.new(distance / 300, Enum.EasingStyle.Linear),
+        {CFrame = gg}
+    )
 
-    -- Offset khi đang ngồi
     if character.Humanoid.Sit then
         block.CFrame = CFrame.new(block.Position.X, gg.Y, block.Position.Z)
     end
 
-    -- 6. Bật snake camera trước khi play
     _startSnakeCamera(tween, gg.Position)
-
     tween:Play()
 
-    -- 7. Monitor shouldTween
     task.spawn(function()
         while tween.PlaybackState == Enum.PlaybackState.Playing do
-            if not shouldTween then
-                tween:Cancel()
-                break
-            end
+            if not shouldTween then tween:Cancel(); break end
             task.wait(0.1)
         end
     end)
