@@ -1,61 +1,6 @@
 loadstring(game:HttpGet("https://raw.githubusercontent.com/DIO862/Gayyyyyyyyyyyyyy/refs/heads/main/notifynew.lua"))()
 loadstring(game:HttpGet("https://pastefy.app/96m6gCwx/raw"))()
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local plr = Players.LocalPlayer
-local Net = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Net")
-
-local AttackRemote = Net:WaitForChild("RE/RegisterAttack")
-local HitRemote = Net:WaitForChild("RE/RegisterHit")
-
-local FastAttack = {
-    Enabled = true,
-    Rate = 2e-14,           -- Càng nhỏ càng nhanh
-    Range = 60
-}
-
-local function GetTargets()
-    local targets = {}
-    local char = plr.Character
-    if not char or not char:FindFirstChild("HumanoidRootPart") then return targets end
-    
-    local rootPos = char.HumanoidRootPart.Position
-    
-    for _, enemy in ipairs(workspace.Enemies:GetChildren()) do
-        local hrp = enemy:FindFirstChild("HumanoidRootPart")
-        local hum = enemy:FindFirstChild("Humanoid")
-        if hrp and hum and hum.Health > 0 then
-            if (hrp.Position - rootPos).Magnitude <= FastAttack.Range then
-                table.insert(targets, {enemy, hrp})
-            end
-        end
-    end
-    return targets
-end
-
--- Main Loop
-RunService.Heartbeat:Connect(function()
-    if not FastAttack.Enabled then return end
-    
-    local targets = GetTargets()
-    if #targets == 0 then return end
-    
-    local tool = plr.Character:FindFirstChildOfClass("Tool")
-    if not tool then return end
-
-    -- Attack
-    AttackRemote:FireServer(FastAttack.Rate)
-    
-    -- Hit
-    local hitList = {}
-    for _, v in ipairs(targets) do
-        table.insert(hitList, {v[1], v[2]})  -- {enemy, part}
-    end
-    
-    HitRemote:FireServer(targets[1][2], hitList)
-end)
 do
   ply = game.Players
   plr = ply.LocalPlayer 
@@ -1037,7 +982,7 @@ _tp = function(target)
                 task.wait()
                 old_tp(cframenpc)
                 if getdis(cframenpc) < 10 then
-                    local net = ReplicatedStorage.Modules.Net
+                    local net = game:GetService("ReplicatedStorage").Modules.Net
                     net["RF/SubmarineWorkerSpeak"]:InvokeServer("AskKilledTikiBoss")
                     task.wait(0.5)
                     net["RF/SubmarineWorkerSpeak"]:InvokeServer("TravelToSubmergedIsland")
@@ -1053,14 +998,19 @@ _tp = function(target)
     end
     
     local distance = (gg.Position - rootPart.Position).Magnitude
-    local tweenInfo = TweenInfo.new(distance / 300, Enum.EasingStyle.Linear)
-    local tween = game:GetService("TweenService"):Create(block, tweenInfo, {CFrame = gg})    
+    local tweenSpeed = 300 -- Vận tốc Tween mặc định
+    local tweenInfo = TweenInfo.new(distance / tweenSpeed, Enum.EasingStyle.Linear)
     
-    if plr.Character.Humanoid.Sit == true then
-        block.CFrame = CFrame.new(block.Position.X, gg.Y, block.Position.Z)
+    -- Dùng trực tiếp TweenService vào HumanoidRootPart thay vì dùng "block"
+    local tween = game:GetService("TweenService"):Create(rootPart, tweenInfo, {CFrame = gg})    
+    
+    if character.Humanoid.Sit == true then
+        character.Humanoid.Sit = false -- Buộc nhân vật đứng lên nếu đang ngồi
     end  
     
     tween:Play()    
+    
+    local camera = workspace.CurrentCamera
     
     task.spawn(function() 
         while tween.PlaybackState == Enum.PlaybackState.Playing do 
@@ -1068,8 +1018,18 @@ _tp = function(target)
                 tween:Cancel() 
                 break 
             end 
-            task.wait(0.1) 
-        end 
+            
+            -- [CAMERA LOGIC] Ép Camera đi theo HumanoidRootPart mượt mà
+            camera.CameraType = Enum.CameraType.Scriptable
+            local camOffset = rootPart.CFrame * CFrame.new(0, 15, 30) -- Camera cách nhân vật 30 stud, cao 15 stud
+            camera.CFrame = CFrame.lookAt(camOffset.Position, rootPart.Position)
+            
+            task.wait() -- Cập nhật mỗi frame để tránh giật lag
+        end
+        
+        -- Trả Camera về trạng thái Custom bình thường khi dừng Tween
+        camera.CameraType = Enum.CameraType.Custom
+        camera.CameraSubject = character:FindFirstChild("Humanoid")
     end)
     
     return tween
@@ -1441,7 +1401,7 @@ local redzlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/thidi
 local Window = redzlib:MakeWindow({
     Title = "DIO Hub ",
     SubTitle = "DIO Remake Script",
-    SaveFolder = "taynaiget.json"
+    SaveFolder = "dio.json"
 })
 
 local Minimizer = Window:NewMinimizer({
@@ -1464,6 +1424,7 @@ local Tabs = {
     SeaEvent = Window:MakeTab({ Title = "Tab Sea Event", Icon = "waves" }),
     Race = Window:MakeTab({ Title = "Tab Mirage And Race", Icon = "rbxassetid://11162889532" }),
     Prehistoric = Window:MakeTab({ Title = "Tab Prehistoric Event", Icon = "tent" }),
+    Wedhook = Window:MakeTab({ Title = "Tab Wedhook", Icon = "" }), 
     Esp = Window:MakeTab({ Title = "Tab Stats And Esp", Icon = "rbxassetid://7040410130" }),
     Raids = Window:MakeTab({ Title = "Tab Fruit And Raid", Icon = "rbxassetid://11155986081" }),
     Combat = Window:MakeTab({ Title = "Tab Local Player", Icon = "rbxassetid://13075651575" }),
@@ -4215,7 +4176,7 @@ end)
 RaceV4Aura = Tabs.Settings:AddToggle({
 Name = "Auto Turn on Race V4", 
 Description = "", 
-Default = false,
+Default = true, 
 Callback = function(Value)
   _G.RaceClickAutov4 = Value
 end})
@@ -4232,7 +4193,7 @@ spawn(function()
 end)
 
 RandomAround = Tabs.Settings:AddToggle({
-Name = "Auto Turn on Spin  xyz", 
+Name = "Auto Turn on Spin xyz", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -10968,7 +10929,6 @@ local function toggleFly(value)
                 return
             end
             
-      
             for _, part in ipairs(player.Character:GetDescendants()) do
                 if part:IsA("BasePart") and part.CanCollide then
                     part.CanCollide = false
