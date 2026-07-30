@@ -999,60 +999,23 @@ _tp = function(target)
     
     local distance = (gg.Position - rootPart.Position).Magnitude
     local tweenInfo = TweenInfo.new(distance / 300, Enum.EasingStyle.Linear)
-    
-    -- ==========================================
-    --       PROXY PART TWEEN (CHO PHÉP XOAY CAM)
-    -- ==========================================
-    local TweenService = game:GetService("TweenService")
-    local RunService = game:GetService("RunService")
-    
-    -- Tạo một Part tàng hình làm vật trung gian (Proxy)
-    local tweenPart = Instance.new("Part")
-    tweenPart.Size = Vector3.new(1, 1, 1)
-    tweenPart.Transparency = 1
-    tweenPart.CanCollide = false
-    tweenPart.Anchored = true
-    tweenPart.CFrame = rootPart.CFrame
-    tweenPart.Parent = workspace
+    local tween = game:GetService("TweenService"):Create(block, tweenInfo, {CFrame = gg})    
     
     if plr.Character.Humanoid.Sit == true then
-        tweenPart.CFrame = CFrame.new(tweenPart.Position.X, gg.Y, tweenPart.Position.Z)
+        block.CFrame = CFrame.new(block.Position.X, gg.Y, block.Position.Z)
     end  
     
-    -- Tween Part tàng hình thay vì Tween Camera hay Nhân vật
-    local tween = TweenService:Create(tweenPart, tweenInfo, {CFrame = gg})
-    tween:Play()  
-    
-    -- Dùng Heartbeat để ép nhân vật dính vào Part tàng hình sau khi vật lý game đã tính toán xong (giảm giật)
-    local moveConnection
-    moveConnection = RunService.Heartbeat:Connect(function()
-        if tween.PlaybackState == Enum.PlaybackState.Playing and shouldTween then
-            if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-                -- Cập nhật CFrame của nhân vật theo Part tàng hình
-                plr.Character.HumanoidRootPart.CFrame = tweenPart.CFrame
-                -- Đưa Velocity về 0 để không bị văng ngầm do gia tốc
-                plr.Character.HumanoidRootPart.Velocity = Vector3.zero
-            end
-        else
-            -- Khi bay xong, ngắt kết nối và xóa Part ảo
-            if moveConnection then moveConnection:Disconnect() end
-            if tweenPart then tweenPart:Destroy() end
-        end
-    end)
+    tween:Play()    
     
     task.spawn(function() 
         while tween.PlaybackState == Enum.PlaybackState.Playing do 
             if not shouldTween then 
                 tween:Cancel() 
-                -- Đảm bảo dọn dẹp sạch sẽ nếu người chơi tắt Farm giữa chừng
-                if moveConnection then moveConnection:Disconnect() end
-                if tweenPart then tweenPart:Destroy() end
                 break 
             end 
             task.wait(0.1) 
         end 
     end)
-    -- ==========================================
     
     return tween
 end
