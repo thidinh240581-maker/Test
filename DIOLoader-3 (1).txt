@@ -8831,33 +8831,71 @@ Default = false,
 Callback = function(Value)
   _G.FrozenDimension = Value
 end})
+
 spawn(function()
   while task.wait(1) do
     if _G.FrozenDimension then 
       pcall(function()
-        if not workspace["_WorldOrigin"].Locations:FindFirstChild("Frozen Dimension", true) then                
+        local Locations = workspace["_WorldOrigin"].Locations
+        local Map = workspace.Map
+        
+        -- Danh sách các tên đảo bạn muốn kiểm tra
+        local possibleNames = {"Frozen Dimension", "LeviathanGate", "Leviathan Island"}
+        local foundName = nil
+        
+        -- Dò xem tên nào đang thực sự hiển thị trong server
+        for _, name in ipairs(possibleNames) do
+            if Locations:FindFirstChild(name, true) or Map:FindFirstChild(name) then
+                foundName = name
+                break -- Tìm thấy một tên đúng thì dừng vòng lặp dò tìm
+            end
+        end
+
+        -- Nếu chưa tìm thấy đảo nào thì bắt đầu lái thuyền đi tìm
+        if not foundName then                
           local myBoat = CheckBoat()
           if not myBoat then
             local buyBoatCFrame = CFrame.new(-16927.451, 9.086, 433.864)
             TeleportToTarget(buyBoatCFrame)
-            if (buyBoatCFrame.Position - plr.Character.HumanoidRootPart.Position).Magnitude <= 10 then replicated.Remotes.CommF_:InvokeServer("BuyBoat", _G.SelectedBoat) end
+            if (buyBoatCFrame.Position - plr.Character.HumanoidRootPart.Position).Magnitude <= 10 then 
+                replicated.Remotes.CommF_:InvokeServer("BuyBoat", _G.SelectedBoat) 
+            end
           else
             if plr.Character.Humanoid.Sit == false then
               local boatSeatCFrame = myBoat.VehicleSeat.CFrame * CFrame.new(0, 1, 0)
               _tp(boatSeatCFrame)
             else            
-              repeat wait()
+              repeat task.wait()
                 local targetDestination = CFrame.new(-10000000, 31, 37016.25)
-                if CheckEnemiesBoat() or CheckTerrorShark() or CheckPirateGrandBrigade() or  CheckSeaBeast() or CheckHauntedCrew() or CheckFishCrew() or CheckPiranha() or CheckShark() then
-                  _tp(CFrame.new(-10000000, 150, 37016.25))
+                
+                -- Né quái biển trong quá trình đi
+                if CheckEnemiesBoat() or CheckTerrorShark() or CheckPirateGrandBrigade() or CheckSeaBeast() or CheckHauntedCrew() or CheckFishCrew() or CheckPiranha() or CheckShark() then
+                  _tp(CFrame.new(-1000000000, 300, 37016.25))
                 else
-                  _tp(CFrame.new(-10000000, 31, 37016.25))
+                  _tp(CFrame.new(-1000000000, 160, 37016.25))
                 end
-              until not _G.FrozenDimension or (targetDestination.Position - plr.Character.HumanoidRootPart.Position).Magnitude <= 10 or workspace["_WorldOrigin"].Locations:FindFirstChild("Frozen Dimension") or plr.Character.Humanoid.Sit == false plr.Character.Humanoid.Sit = false
+                
+                -- Liên tục kiểm tra xem đảo đã xuất hiện chưa trong lúc đi
+                local isIslandSpawned = false
+                for _, name in ipairs(possibleNames) do
+                    if Locations:FindFirstChild(name, true) then
+                        isIslandSpawned = true
+                        break
+                    end
+                end
+
+              -- Dừng lại nếu: tắt auto, tới mốc tọa độ, đảo xuất hiện, hoặc nhân vật bị văng khỏi ghế
+              until not _G.FrozenDimension or (targetDestination.Position - plr.Character.HumanoidRootPart.Position).Magnitude <= 10 or isIslandSpawned or plr.Character.Humanoid.Sit == false
+              
+              plr.Character.Humanoid.Sit = false
             end
           end
         else 
-          _tp(workspace.Map.FrozenDimension.Center.CFrame*CFrame.new(0,300,0))
+          -- Dịch chuyển thẳng tới Center của đảo với cái tên tương ứng vừa dò được
+          local targetIsland = Map:FindFirstChild(foundName)
+          if targetIsland and targetIsland:FindFirstChild("Center") then
+              _tp(targetIsland.Center.CFrame * CFrame.new(0, 300, 0))
+          end
         end
       end)
     end
