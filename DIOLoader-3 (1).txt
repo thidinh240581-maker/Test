@@ -1,17 +1,111 @@
-loadstring(game:HttpGet("https://raw.githubusercontent.com/DIO862/Gayyyyyyyyyyyyyy/refs/heads/main/notifynew.lua"))()
+local FastAttack = {
+    Enabled = true,
+    Range = 60,
+    Delay = 0.03, 
+}
+
+
+local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+
+local LocalPlayer = Players.LocalPlayer
+local Net = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Net")
+local RegisterAttack = Net:WaitForChild("RE/RegisterAttack")
+local RegisterHit = Net:WaitForChild("RE/RegisterHit")
+
+local Enemies = Workspace:WaitForChild("Enemies")
+local Characters = Workspace:WaitForChild("Characters")
+
+local lastHit = 0
+local cached = {}
+local lastCache = 0
+
+local function IsAlive(model)
+    local hum = model and model:FindFirstChildOfClass("Humanoid")
+    return hum and hum.Health > 0
+end
+
+local function GetTargets(char)
+    local now = tick()
+    if now - lastCache < 0.12 and #cached > 0 then
+        return cached
+    end
+    lastCache = now
+    cached = {}
+
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if not root then return cached end
+    local pos = root.Position
+
+    local function scan(folder)
+        for _, v in ipairs(folder:GetChildren()) do
+            if IsAlive(v) then
+                local hrp = v:FindFirstChild("HumanoidRootPart")
+                if hrp and (hrp.Position - pos).Magnitude <= FastAttack.Range then
+                    local head = v:FindFirstChild("Head") or hrp
+                    table.insert(cached, {v, head})
+                end
+            end
+        end
+    end
+
+    scan(Enemies)
+    scan(Characters)
+    return cached
+end
+
+local function Attack()
+    if not FastAttack.Enabled then return end
+
+    local char = LocalPlayer.Character
+    if not char then return end
+
+    local tool = char:FindFirstChildOfClass("Tool")
+    if not tool then return end
+
+    local tip = tool.ToolTip or tool:GetAttribute("WeaponType")
+    if tip ~= "Melee" and tip ~= "Sword" and tip ~= "Blox Fruit" then return end
+
+    local now = tick()
+    if now - lastHit < FastAttack.Delay then return end
+    lastHit = now
+
+    local targets = GetTargets(char)
+    if #targets == 0 then return end
+
+    pcall(function()
+        RegisterAttack:FireServer(0.0001)
+        RegisterHit:FireServer(targets[1][2], targets)
+    end)
+end
+
+-- Chỉ 1 connection
+RunService.Heartbeat:Connect(function()
+    pcall(Attack)
+end)
+
+-- Tắt rung camera
+pcall(function()
+    require(ReplicatedStorage.Util.CameraShaker):Stop()
+end)
+
+local RunService = game:GetService("RunService")
+local Stats = game:GetService("Stats")
+
 local fpsGui = Instance.new("ScreenGui", game.CoreGui)
 fpsGui.Name = "FPS_Display_80"
 
 local fpsLabel = Instance.new("TextLabel", fpsGui)
 fpsLabel.Position = UDim2.new(0, 10, 0, 10)
-fpsLabel.Size = UDim2.new(0, 120, 0, 30)
+fpsLabel.Size = UDim2.new(0, 150, 0, 30) -- tăng width để chứa cả Ping
 fpsLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 fpsLabel.BackgroundTransparency = 0.4
 fpsLabel.TextColor3 = Color3.new(1, 1, 1)
 fpsLabel.Font = Enum.Font.Code
 fpsLabel.TextSize = 18
-fpsLabel.Text = "FPS: ..."
+fpsLabel.Text = "FPS: ... | Ping: ..."
 fpsLabel.TextXAlignment = Enum.TextXAlignment.Left
 
 local lastTime = tick()
@@ -20,11 +114,13 @@ local frames = 0
 RunService.RenderStepped:Connect(function()
     frames += 1
     if tick() - lastTime >= 1 then
-        fpsLabel.Text = "FPS: " .. frames
+        local ping = math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue())
+        fpsLabel.Text = "FPS: " .. frames .. " | Ping: " .. ping
         frames = 0
         lastTime = tick()
     end
 end)
+loadstring(game:HttpGet("https://raw.githubusercontent.com/DIO862/Gayyyyyyyyyyyyyy/refs/heads/main/notifynew.lua"))()
 
 do
   ply = game.Players
@@ -1424,28 +1520,28 @@ local MobileButton = Minimizer:CreateMobileMinimizer({
 })
 
 local Tabs = {
-    Status = Window:MakeTab({ Title = "Info Discord", Icon = "Info" }), 
-    Info = Window:MakeTab({ Title = "Tab Status Server", Icon = "crown" }),
-    Settings = Window:MakeTab({ Title = "Tab Setting", Icon = "rbxassetid://7734053495" }),
-    Main = Window:MakeTab({ Title = "Tab Farming", Icon = "rbxassetid://7733960981" }),
-    Fish = Window:MakeTab({ Title = "Tab Fishing", Icon = "rbxassetid://127664059821666" }),
-    Quests = Window:MakeTab({ Title = "Tab Quest And Item", Icon = "rbxassetid://13075622619" }),
-    SeaEvent = Window:MakeTab({ Title = "Tab Sea Event", Icon = "waves" }),
-    Race = Window:MakeTab({ Title = "Tab Mirage And Race", Icon = "rbxassetid://11162889532" }),
-    Prehistoric = Window:MakeTab({ Title = "Tab Prehistoric Event", Icon = "tent" }),
-    Wedhook = Window:MakeTab({ Title = "Tab Wedhook", Icon = "" }), 
-    Esp = Window:MakeTab({ Title = "Tab Stats And Esp", Icon = "rbxassetid://7040410130" }),
-    Raids = Window:MakeTab({ Title = "Tab Fruit And Raid", Icon = "rbxassetid://11155986081" }),
-    Combat = Window:MakeTab({ Title = "Tab Local Player", Icon = "rbxassetid://13075651575" }),
-    Travel = Window:MakeTab({ Title = "Tab Teleport Island", Icon = "locate" }),
-    Shop = Window:MakeTab({ Title = "Tab Shopping", Icon = "rbxassetid://6031265976" }),
-    Hop = Window:MakeTab({ Title = "Tab FPS Boost", Icon = "locate" }),
-    Misc = Window:MakeTab({ Title = "Tab Miscellaneous", Icon = "rbxassetid://10709783577" })
+    Info = Window:MakeTab({ Title = "INFO Hub", Icon = "crown" }),
+    Status = Window:MakeTab({ Title = "Status Server", Icon = "crown" }),
+    Settings = Window:MakeTab({ Title = "Setting", Icon = "rbxassetid://7734053495" }),
+    Main = Window:MakeTab({ Title = "Farming", Icon = "rbxassetid://7733960981" }),
+    Fish = Window:MakeTab({ Title = "Fishing", Icon = "rbxassetid://127664059821666" }),
+    Quests = Window:MakeTab({ Title = "Quest And Item", Icon = "rbxassetid://13075622619" }),
+    SeaEvent = Window:MakeTab({ Title = "Sea Event", Icon = "waves" }),
+    Race = Window:MakeTab({ Title = "Mirage And Race", Icon = "rbxassetid://11162889532" }),
+    Prehistoric = Window:MakeTab({ Title = "Prehistoric Event", Icon = "tent" }),
+    Wedhook = Window:MakeTab({ Title = "Wedhook", Icon = "" }), 
+    Esp = Window:MakeTab({ Title = "Stats And Esp", Icon = "rbxassetid://7040410130" }),
+    Raids = Window:MakeTab({ Title = "Fruit And Raid", Icon = "rbxassetid://11155986081" }),
+    Combat = Window:MakeTab({ Title = "Local Player", Icon = "rbxassetid://13075651575" }),
+    Travel = Window:MakeTab({ Title = "Teleport Island", Icon = "locate" }),
+    Shop = Window:MakeTab({ Title = "Shopping", Icon = "rbxassetid://6031265976" }),
+    Hop = Window:MakeTab({ Title = "FPS Boost", Icon = "locate" }),
+    Misc = Window:MakeTab({ Title = "Miscellaneous", Icon = "rbxassetid://10709783577" })
 }
 
 Tabs.Status:AddSection("Information")
 
-Tabs.Status:AddDiscordInvite({
+Tabs.Info:AddDiscordInvite({
 	Title = "DIO hub | Community",
 	Description = "Have Bot king get script in discord",
 	Banner = "rbxassetid://105848560127717", 
@@ -1454,7 +1550,7 @@ Tabs.Status:AddDiscordInvite({
 	Members = 6767, 
 	Online = 3636,
 })
-Tabs.Status:AddDiscordInvite({
+Tabs.Info:AddDiscordInvite({
 	Title = "DIO hub | Youtube",
 	Description = "Have Bot king get script in discord",
 	Banner = "rbxassetid://105848560127717", 
@@ -1463,7 +1559,7 @@ Tabs.Status:AddDiscordInvite({
 	Members = 6767,
 	Online = 3636,
 })
-Tabs.Info:AddSection("Status Server")
+Tabs.Status:AddSection("Status Server")
 
 Tabs.Hop:AddSection("Fps Booster")
 
@@ -1622,6 +1718,8 @@ spawn(function()
     end
 end)
 
+Tabs.Status:AddSection("Status Islands")
+
 local MirageCheck = Tabs.Info:AddParagraph("Mirage Island", "Status: ")
 
 local previousMirageStatus = ""
@@ -1678,6 +1776,8 @@ spawn(function()
     end
 end)
 
+Tabs.Status:AddSection("Status Boss")
+
 local CakePrinceStatus = Tabs.Info:AddParagraph("Cake Prince", "")
 
 spawn(function()
@@ -1720,6 +1820,7 @@ spawn(function()
     end
 end)
 
+Tabs.Status:AddSection("Status Other")
 local FullMoonCheck = Tabs.Info:AddParagraph("Full Moon", "")
 
 task.spawn(function()
@@ -9428,6 +9529,44 @@ berriesEsp = function()
         end
     end
 end
+Tabs.Wedhook:AddSection("Wedhook Island") 
+
+Tabs.Wedhook:AddToggle({
+    Name = "Wedhook Find Kitsune Island [Soon]",
+    Description = "",
+    Default = false,
+    Callback = function(Value)
+    end
+}) 
+Tabs.Wedhook:AddToggle({
+    Name = "Wedhook Find Prehistoric Islands [Soon]",
+    Description = "",
+    Default = false,
+    Callback = function(Value)
+    end
+}) 
+Tabs.Wedhook:AddToggle({
+    Name = "Wedhook Find Frozen Dimension [Soon]",
+    Description = "",
+    Default = false,
+    Callback = function(Value)
+    end
+}) 
+Tabs.Wedhook:AddToggle({
+    Name = "Wedhook Find Mirage Islands [Soon]",
+    Description = "",
+    Default = false,
+    Callback = function(Value)
+    end
+}) 
+
+Tabs.Wedhook:AddTextBox({
+    Name = "Url Your Wedhook",
+    Placeholder = "",
+    ClearOnFocus = true,
+    Callback = function(Value)
+    end
+})
 Tabs.Esp:AddToggle({
     Name = "Esp Berry",
     Description = "",
@@ -11891,340 +12030,6 @@ spawn(function()
     end
   end
 end)
-local player = game.Players.LocalPlayer
-local function IsEntityAlive(entity)
-    if not entity then return false end
-    local humanoid = entity:FindFirstChild("Humanoid")
-    return humanoid and humanoid.Health > 0
-end
-local function GetEnemiesInRange(character, range)
-    local enemies = game:GetService("Workspace").Enemies:GetChildren()
-    local players = game:GetService("Players"):GetPlayers()
-    local targets = {}
-    local playerPos = character:GetPivot().Position
-    for _, enemy in ipairs(enemies) do
-        local rootPart = enemy:FindFirstChild("HumanoidRootPart")
-        if rootPart and IsEntityAlive(enemy) then
-            local distance = (rootPart.Position - playerPos).Magnitude
-            if distance <= range then
-                table.insert(targets, enemy)
-            end
-        end
-    end
-    for _, otherPlayer in ipairs(players) do
-        if otherPlayer ~= player and otherPlayer.Character then
-            local rootPart = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
-            if rootPart and IsEntityAlive(otherPlayer.Character) then
-                local distance = (rootPart.Position - playerPos).Magnitude
-                if distance <= range then
-                    table.insert(targets, otherPlayer.Character)
-                end
-            end
-        end
-    end
-    return targets
-end
-function AttackNoCoolDown()
-    local player = game:GetService("Players").LocalPlayer
-    local character = player.Character
-    if not character then return end
-    local equippedWeapon = nil
-    for _, item in ipairs(character:GetChildren()) do
-        if item:IsA("Tool") then
-            equippedWeapon = item
-            break
-        end
-    end
-    if not equippedWeapon then return end
-    local enemiesInRange = GetEnemiesInRange(character, 60)
-    if #enemiesInRange == 0 then return end
-    local storage = game:GetService("ReplicatedStorage")
-    local modules = storage:FindFirstChild("Modules")
-    if not modules then return end
-    local attackEvent = storage:WaitForChild("Modules"):WaitForChild("Net"):WaitForChild("RE/RegisterAttack")
-    local hitEvent = storage:WaitForChild("Modules"):WaitForChild("Net"):WaitForChild("RE/RegisterHit")
-    if not attackEvent or not hitEvent then return end
-    local targets, mainTarget = {}, nil
-    for _, enemy in ipairs(enemiesInRange) do
-        if not enemy:GetAttribute("IsBoat") then
-            local HitboxLimbs = {"RightLowerArm", "RightUpperArm", "LeftLowerArm", "LeftUpperArm", "RightHand", "LeftHand"}
-            local head = enemy:FindFirstChild(HitboxLimbs[math.random(#HitboxLimbs)]) or enemy.PrimaryPart
-            if head then
-                table.insert(targets, { enemy, head })
-                mainTarget = head
-            end
-        end
-    end
-    if not mainTarget then return end
-    attackEvent:FireServer(0)
-    local playerScripts = player:FindFirstChild("PlayerScripts")
-    if not playerScripts then return end
-    local localScript = playerScripts:FindFirstChildOfClass("LocalScript")
-    while not localScript do
-        playerScripts.ChildAdded:Wait()
-        localScript = playerScripts:FindFirstChildOfClass("LocalScript")
-    end
-    local hitFunction
-    if getsenv then
-        local success, scriptEnv = pcall(getsenv, localScript)
-        if success and scriptEnv then
-            hitFunction = scriptEnv._G.SendHitsToServer
-        end
-    end
-    local successFlags, combatRemoteThread = pcall(function()
-        return require(modules.Flags).COMBAT_REMOTE_THREAD or false
-    end)
-    if successFlags and combatRemoteThread and hitFunction then
-        hitFunction(mainTarget, targets)
-    elseif successFlags and not combatRemoteThread then
-        hitEvent:FireServer(mainTarget, targets)
-    end
-end
-CameraShakerR = require(game.ReplicatedStorage.Util.CameraShaker)
-CameraShakerR:Stop()
-get_Monster=function()for a,b in pairs(workspace.Enemies:GetChildren())do local c=b:FindFirstChild("UpperTorso")or b:FindFirstChild("Head")if b:FindFirstChild("HumanoidRootPart",true)and c then if(b.Head.Position-plr.Character.HumanoidRootPart.Position).Magnitude<=50 then return true,c.Position end end end;for a,d in pairs(workspace.SeaBeasts:GetChildren())do if d:FindFirstChild("HumanoidRootPart")and d:FindFirstChild("Health")and d.Health.Value>0 then return true,d.HumanoidRootPart.Position end end;for a,d in pairs(workspace.Enemies:GetChildren())do if d:FindFirstChild("Health")and d.Health.Value>0 and d:FindFirstChild("VehicleSeat")then return true,d.Engine.Position end end end
-Actived=function()local a=game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool")for b,c in next,getconnections(a.Activated)do if typeof(c.Function)=='function'then getupvalues(c.Function)end end end
-task.spawn(function()
-  RunSer.Heartbeat:Connect(function()
-    pcall(function()      
-      if not _G.Seriality then return end      
-      AttackNoCoolDown() 
-      local Pretool = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool")
-      local ToolTip = Pretool.ToolTip
-      local MobAura, Mon = get_Monster()      
-      if ToolTip == "Blox Fruit" then
-        if MobAura then           
-          local LeftClickRemote = Pretool:FindFirstChild('LeftClickRemote');
-          if LeftClickRemote then Actived() LeftClickRemote:FireServer(Vector3.new(0.01,-500,0.01),1,true);LeftClickRemote:FireServer(false)end
-        end     		                         
-      end      
-    end)
-  end)
-end)
-local FastAttackModule = {}
-local HitRegistrationModule = {}
-local MainController = {}
-
-local GameService = game
-local Players = GameService:GetService("Players")
-local RunService = GameService:GetService("RunService")
-local ReplicatedStorage = GameService:GetService("ReplicatedStorage")
-local Workspace = GameService:GetService("Workspace")
-
-local LocalPlayer = Players.LocalPlayer
-local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-
-local function SafeWaitForChild(parent, childName)
-    local success, result = pcall(function()
-        return parent:WaitForChild(childName)
-    end)
-    return result
-end
-
-local Enemies = SafeWaitForChild(Workspace, "Enemies")
-local Characters = SafeWaitForChild(Workspace, "Characters")
-local Modules = SafeWaitForChild(ReplicatedStorage, "Modules")
-local Net = SafeWaitForChild(Modules, "Net")
-
-FastAttackModule.Rate = 0.000000002
-FastAttackModule.Enabled = true
-
-function FastAttackModule.IsAlive(target)
-    local humanoid = target:FindFirstChild("Humanoid")
-    if humanoid and humanoid.Health > 0 then
-        return true
-    end
-    return false
-end
-
-function FastAttackModule.GetNearbyTargets(character, folder)
-    local characterPosition = character:GetPivot().Position
-    local nearbyTargets = {}
-    local children = folder:GetChildren()
-    
-    for i = 1, #children do
-        local target = children[i]
-        local humanoid = target:FindFirstChild("Humanoid")
-        local rootPart = target:FindFirstChild("HumanoidRootPart")
-        
-        if humanoid and rootPart and humanoid.Health > 0 then
-            local distance = (rootPart.Position - characterPosition).Magnitude
-            if distance <= 60 then
-                table.insert(nearbyTargets, target)
-            end
-        end
-    end
-    return nearbyTargets
-end
-
-function FastAttackModule.GetTargetParts(targetList)
-    local result = {}
-    local count = #targetList
-    
-    for i = 1, count do
-        local target = targetList[i]
-        local head = target:FindFirstChild("Head") or target.PrimaryPart
-        if head then
-            table.insert(result, {target, head})
-        end
-    end
-    return result
-end
-
-function FastAttackModule.GetAllTargets(character)
-    local enemies = FastAttackModule.GetNearbyTargets(character, Enemies)
-    local otherCharacters = FastAttackModule.GetNearbyTargets(character, Characters)
-    
-    local allTargets = {}
-    for i = 1, #enemies do
-        table.insert(allTargets, enemies[i])
-    end
-    for i = 1, #otherCharacters do
-        table.insert(allTargets, otherCharacters[i])
-    end
-    return allTargets
-end
-
-function FastAttackModule.ExecuteFastAttack()
-    local character = LocalPlayer.Character
-    if not character then return end
-    
-    local tool = character:FindFirstChildOfClass("Tool")
-    if not tool then return end
-    
-    local targets = FastAttackModule.GetAllTargets(character)
-    if #targets < 1 then return end
-    
-    local targetParts = FastAttackModule.GetTargetParts(targets)
-    if #targetParts < 1 then return end
-    
-    local attackRemote = Net["RE/RegisterAttack"]
-    local hitRemote = Net["RE/RegisterHit"]
-    
-    attackRemote:FireServer(FastAttackModule.Rate)
-    local targetHead = targetParts[1][2]
-    hitRemote:FireServer(targetHead, targetParts)
-end
-
-local AttackRemoteTarget
-local AttackRemoteId
-
-local function InitializeHitRegistration()
-    local foldersToCheck = {
-        ReplicatedStorage.Util,
-        ReplicatedStorage.Common,
-        ReplicatedStorage.Remotes,
-        ReplicatedStorage.Assets,
-        ReplicatedStorage.FX
-    }
-
-    for _, folder in ipairs(foldersToCheck) do
-        local children = folder:GetChildren()
-        
-        for _, child in ipairs(children) do
-            if child:IsA("RemoteEvent") and child:GetAttribute("Id") then
-                AttackRemoteTarget = child
-                AttackRemoteId = child:GetAttribute("Id")
-            end
-        end
-
-        folder.ChildAdded:Connect(function(child)
-            if child:IsA("RemoteEvent") and child:GetAttribute("Id") then
-                AttackRemoteTarget = child
-                AttackRemoteId = child:GetAttribute("Id")
-            end
-        end)
-    end
-end
-
-InitializeHitRegistration()
-
-function HitRegistrationModule.Execute()
-    local character = LocalPlayer.Character
-    if not character then return end
-    
-    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-    if not humanoidRootPart then return end
-    
-    local hitTargets = {}
-
-    local function ScanFolder(folder)
-        local children = folder:GetChildren()
-        for i = 1, #children do
-            local target = children[i]
-            local humanoid = target:FindFirstChild("Humanoid")
-            local rootPart = target:FindFirstChild("HumanoidRootPart")
-            
-            if humanoid and rootPart and humanoid.Health > 0 and target ~= character then
-                local distance = (rootPart.Position - humanoidRootPart.Position).Magnitude
-                if distance <= 60 then
-                    local targetChildren = target:GetChildren()
-                    for _, child in ipairs(targetChildren) do
-                        if child:IsA("BasePart") then
-                            table.insert(hitTargets, {target, child})
-                        end
-                    end
-                end
-            end
-        end
-    end
-
-    ScanFolder(Enemies)
-    ScanFolder(Characters)
-
-    local tool = character:FindFirstChildOfClass("Tool")
-    
-    if #hitTargets > 0 and tool and (tool:GetAttribute("WeaponType") == "Melee" or tool:GetAttribute("WeaponType") == "Sword") then
-        local seed = Modules.Net.seed:InvokeServer()
-        
-        local attackRemote = Net["RE/RegisterAttack"]
-        local hitRemote = Net["RE/RegisterHit"]
-        
-        attackRemote:FireServer()
-        
-        local targetHead = hitTargets[1][1]:FindFirstChild("Head")
-        if not targetHead then return end
-
-        hitRemote:FireServer(targetHead, hitTargets, {})
-        
-        if AttackRemoteTarget then
-            local remoteCode = "RE/RegisterHit"
-            local encryptionKey = math.floor(Workspace:GetServerTimeNow() / 10 % 10) + 1
-            
-            local encodedString = string.gsub(remoteCode, ".", function(char)
-                return string.char(bit32.bxor(string.byte(char), encryptionKey))
-            end)
-
-            local finalId = bit32.bxor(AttackRemoteId + 909090, seed * 2)
-            
-            cloneref(AttackRemoteTarget):FireServer(
-                encodedString,
-                finalId,
-                targetHead,
-                hitTargets
-            )
-        end
-    end
-end
-
-local function DisableCameraShake()
-    local cameraModule = require(ReplicatedStorage.Util.CameraShaker)
-    cameraModule:Stop()
-end
-
-local function StartMainLoops()
-    task.spawn(function()
-        while task.wait(FastAttackModule.Rate) do
-            FastAttackModule.ExecuteFastAttack()
-        end
-    end)
-
-    RunService.Heartbeat:Connect(function()
-        pcall(HitRegistrationModule.Execute)
-    end)
-end
-
-StartMainLoops()
 
 local function getBeastHunter()
     local character = LocalPlayer.Character
