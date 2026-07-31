@@ -8870,9 +8870,9 @@ spawn(function()
                 
                 -- Né quái biển trong quá trình đi
                 if CheckEnemiesBoat() or CheckTerrorShark() or CheckPirateGrandBrigade() or CheckSeaBeast() or CheckHauntedCrew() or CheckFishCrew() or CheckPiranha() or CheckShark() then
-                  _tp(CFrame.new(-1000000000, 300, 37016.25))
+                  _tp(CFrame.new(-10000000, 250, 37016.25))
                 else
-                  _tp(CFrame.new(-1000000000, 160, 37016.25))
+                  _tp(CFrame.new(-10000000, 60, 37016.25))
                 end
                 
                 -- Liên tục kiểm tra xem đảo đã xuất hiện chưa trong lúc đi
