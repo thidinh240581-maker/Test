@@ -1,96 +1,4 @@
-local FastAttack = {
-    Enabled = true,
-    Range = 60,
-    Delay = 0.03, 
-}
-
-
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Workspace = game:GetService("Workspace")
-
-local LocalPlayer = Players.LocalPlayer
-local Net = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Net")
-local RegisterAttack = Net:WaitForChild("RE/RegisterAttack")
-local RegisterHit = Net:WaitForChild("RE/RegisterHit")
-
-local Enemies = Workspace:WaitForChild("Enemies")
-local Characters = Workspace:WaitForChild("Characters")
-
-local lastHit = 0
-local cached = {}
-local lastCache = 0
-
-local function IsAlive(model)
-    local hum = model and model:FindFirstChildOfClass("Humanoid")
-    return hum and hum.Health > 0
-end
-
-local function GetTargets(char)
-    local now = tick()
-    if now - lastCache < 0.12 and #cached > 0 then
-        return cached
-    end
-    lastCache = now
-    cached = {}
-
-    local root = char:FindFirstChild("HumanoidRootPart")
-    if not root then return cached end
-    local pos = root.Position
-
-    local function scan(folder)
-        for _, v in ipairs(folder:GetChildren()) do
-            if IsAlive(v) then
-                local hrp = v:FindFirstChild("HumanoidRootPart")
-                if hrp and (hrp.Position - pos).Magnitude <= FastAttack.Range then
-                    local head = v:FindFirstChild("Head") or hrp
-                    table.insert(cached, {v, head})
-                end
-            end
-        end
-    end
-
-    scan(Enemies)
-    scan(Characters)
-    return cached
-end
-
-local function Attack()
-    if not FastAttack.Enabled then return end
-
-    local char = LocalPlayer.Character
-    if not char then return end
-
-    local tool = char:FindFirstChildOfClass("Tool")
-    if not tool then return end
-
-    local tip = tool.ToolTip or tool:GetAttribute("WeaponType")
-    if tip ~= "Melee" and tip ~= "Sword" and tip ~= "Blox Fruit" then return end
-
-    local now = tick()
-    if now - lastHit < FastAttack.Delay then return end
-    lastHit = now
-
-    local targets = GetTargets(char)
-    if #targets == 0 then return end
-
-    pcall(function()
-        RegisterAttack:FireServer(0.0001)
-        RegisterHit:FireServer(targets[1][2], targets)
-    end)
-end
-
--- Chỉ 1 connection
-RunService.Heartbeat:Connect(function()
-    pcall(Attack)
-end)
-
--- Tắt rung camera
-pcall(function()
-    require(ReplicatedStorage.Util.CameraShaker):Stop()
-end)
-
+loadstring(game:HttpGet("https://raw.githubusercontent.com/DIO862/Gayyyyyyyyyyyyyy/refs/heads/main/notifynew.lua"))()
 local RunService = game:GetService("RunService")
 local Stats = game:GetService("Stats")
 
@@ -99,7 +7,7 @@ fpsGui.Name = "FPS_Display_80"
 
 local fpsLabel = Instance.new("TextLabel", fpsGui)
 fpsLabel.Position = UDim2.new(0, 10, 0, 10)
-fpsLabel.Size = UDim2.new(0, 150, 0, 30) -- tăng width để chứa cả Ping
+fpsLabel.Size = UDim2.new(0, 200, 0, 30) -- tăng width để chứa cả Ping
 fpsLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 fpsLabel.BackgroundTransparency = 0.4
 fpsLabel.TextColor3 = Color3.new(1, 1, 1)
@@ -120,7 +28,6 @@ RunService.RenderStepped:Connect(function()
         lastTime = tick()
     end
 end)
-loadstring(game:HttpGet("https://raw.githubusercontent.com/DIO862/Gayyyyyyyyyyyyyy/refs/heads/main/notifynew.lua"))()
 
 do
   ply = game.Players
@@ -378,7 +285,7 @@ end
 local TweenService = game:GetService("TweenService")
 local TweenInfoBring = TweenInfo.new(0.3, Enum.EasingStyle.Linear)
 
-_G.BringRange = _G.BringRange or 200
+_G.BringRange = _G.BringRange or 240
 _G.MaxBringMobs = _G.MaxBringMobs or 6
 
 BringEnemy = function(Mon)
@@ -1503,11 +1410,11 @@ QuestNeta = function()
     }
 end
 
-local redzlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/thidinh240581-maker/Test/refs/heads/main/librarydiofind(Copy).luau"))()
+local redzlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/tlredz/Library/refs/heads/main/redz-V5-remake/main.luau"))()
 local Window = redzlib:MakeWindow({
     Title = "DIO Hub ",
-    SubTitle = "DIO Loader Script | Blox Fruit",
-    SaveFolder = "dio.json"
+    SubTitle = "DIO Remake Script",
+    SaveFolder = "taynaiget.json"
 })
 
 local Minimizer = Window:NewMinimizer({
@@ -1520,46 +1427,45 @@ local MobileButton = Minimizer:CreateMobileMinimizer({
 })
 
 local Tabs = {
-    Info = Window:MakeTab({ Title = "INFO Hub", Icon = "crown" }),
-    Status = Window:MakeTab({ Title = "Status Server", Icon = "crown" }),
-    Settings = Window:MakeTab({ Title = "Setting", Icon = "rbxassetid://7734053495" }),
-    Main = Window:MakeTab({ Title = "Farming", Icon = "rbxassetid://7733960981" }),
-    Fish = Window:MakeTab({ Title = "Fishing", Icon = "rbxassetid://127664059821666" }),
-    Quests = Window:MakeTab({ Title = "Quest And Item", Icon = "rbxassetid://13075622619" }),
-    SeaEvent = Window:MakeTab({ Title = "Sea Event", Icon = "waves" }),
-    Race = Window:MakeTab({ Title = "Mirage And Race", Icon = "rbxassetid://11162889532" }),
-    Prehistoric = Window:MakeTab({ Title = "Prehistoric Event", Icon = "tent" }),
-    Wedhook = Window:MakeTab({ Title = "Wedhook", Icon = "" }), 
-    Esp = Window:MakeTab({ Title = "Stats And Esp", Icon = "rbxassetid://7040410130" }),
-    Raids = Window:MakeTab({ Title = "Fruit And Raid", Icon = "rbxassetid://11155986081" }),
-    Combat = Window:MakeTab({ Title = "Local Player", Icon = "rbxassetid://13075651575" }),
-    Travel = Window:MakeTab({ Title = "Teleport Island", Icon = "locate" }),
-    Shop = Window:MakeTab({ Title = "Shopping", Icon = "rbxassetid://6031265976" }),
-    Hop = Window:MakeTab({ Title = "FPS Boost", Icon = "locate" }),
-    Misc = Window:MakeTab({ Title = "Miscellaneous", Icon = "rbxassetid://10709783577" })
+    Status = Window:MakeTab({ Title = "Info Discord", Icon = "Info" }), 
+    Info = Window:MakeTab({ Title = "Tab Status Server", Icon = "crown" }),
+    Main = Window:MakeTab({ Title = "Tab Farming", Icon = "rbxassetid://7733960981" }),
+    Hop = Window:MakeTab({ Title = "Tab FPS Boost", Icon = "locate" }),
+    Settings = Window:MakeTab({ Title = "Tab Setting", Icon = "rbxassetid://7734053495" }),
+    Fish = Window:MakeTab({ Title = "Tab Fishing", Icon = "rbxassetid://127664059821666" }),
+    Quests = Window:MakeTab({ Title = "Tab Quest And Item", Icon = "rbxassetid://13075622619" }),
+    SeaEvent = Window:MakeTab({ Title = "Tab Sea Event", Icon = "waves" }),
+    Race = Window:MakeTab({ Title = "Tab Mirage And Race", Icon = "rbxassetid://11162889532" }),
+    Prehistoric = Window:MakeTab({ Title = "Tab Prehistoric Event", Icon = "tent" }),
+    Esp = Window:MakeTab({ Title = "Tab Stats And Esp", Icon = "rbxassetid://7040410130" }),
+    Raids = Window:MakeTab({ Title = "Tab Fruit And Raid", Icon = "rbxassetid://11155986081" }),
+    Combat = Window:MakeTab({ Title = "Tab Local Player", Icon = "rbxassetid://13075651575" }),
+    Travel = Window:MakeTab({ Title = "Tab Teleport Island", Icon = "locate" }),
+    Shop = Window:MakeTab({ Title = "Tab Shopping", Icon = "rbxassetid://6031265976" }),
+    Misc = Window:MakeTab({ Title = "Tab Miscellaneous", Icon = "rbxassetid://10709783577" })
 }
 
 Tabs.Status:AddSection("Information")
 
-Tabs.Info:AddDiscordInvite({
+Tabs.Status:AddDiscordInvite({
 	Title = "DIO hub | Community",
 	Description = "Have Bot king get script in discord",
 	Banner = "rbxassetid://105848560127717", 
 	Logo = "rbxassetid://105848560127717",
 	Invite = "https://discord.gg/MjGt2bTWBS",
-	Members = 6767, 
-	Online = 3636,
+	Members = 3774, 
+	Online = 1006, 
 })
-Tabs.Info:AddDiscordInvite({
+Tabs.Status:AddDiscordInvite({
 	Title = "DIO hub | Youtube",
 	Description = "Have Bot king get script in discord",
 	Banner = "rbxassetid://105848560127717", 
 	Logo = "rbxassetid://105848560127717",
 	Invite = "https://www.youtube.com/@dio_plzzz",
-	Members = 6767,
-	Online = 3636,
+	Members = 3774, 
+	Online = 1006, 
 })
-Tabs.Status:AddSection("Status Server")
+Tabs.Info:AddSection("Status Server")
 
 Tabs.Hop:AddSection("Fps Booster")
 
@@ -1718,8 +1624,6 @@ spawn(function()
     end
 end)
 
-Tabs.Status:AddSection("Status Islands")
-
 local MirageCheck = Tabs.Info:AddParagraph("Mirage Island", "Status: ")
 
 local previousMirageStatus = ""
@@ -1776,8 +1680,6 @@ spawn(function()
     end
 end)
 
-Tabs.Status:AddSection("Status Boss")
-
 local CakePrinceStatus = Tabs.Info:AddParagraph("Cake Prince", "")
 
 spawn(function()
@@ -1820,7 +1722,6 @@ spawn(function()
     end
 end)
 
-Tabs.Status:AddSection("Status Other")
 local FullMoonCheck = Tabs.Info:AddParagraph("Full Moon", "")
 
 task.spawn(function()
@@ -1878,6 +1779,8 @@ WeaponDropdown = Tabs.Main:AddDropdown({
     Callback = function(Value)
     _G.ChooseWP = Value
 end})
+
+
 spawn(function()
     while task.wait(0.5) do
         pcall(function()
@@ -2575,6 +2478,8 @@ local Sea1_Islands = {
         Mobs = {"Shanda", "Royal Squad", "Royal Soldier"}
     }
 }
+
+
 local Sea2_Islands = {
 
     ["Kingdom of Rose"] = {
@@ -2653,6 +2558,8 @@ local Sea2_Islands = {
         }
     }
 }
+
+
 local Sea3_Islands = {
 
     ["Port Town"] = {
@@ -2743,6 +2650,8 @@ local Sea3_Islands = {
         }
     }
 }
+
+
 if World1 then
     Tabs.Main:AddDropdown({
         Name = "Select Island",
@@ -2787,6 +2696,8 @@ Tabs.Main:AddToggle({
         _G.AutoFarmIsland = Value
     end
 })
+
+
 task.spawn(function()
     while task.wait(0.2) do
         if not _G.AutoFarmIsland then continue end
@@ -2935,6 +2846,8 @@ EliteH = Tabs.Main:AddToggle({
 	Callback = function(Value)
 	_G.FarmEliteH = Value
 end})
+
+
 local function HopServer()
 	local Http = game:GetService("HttpService")
 	local TPS = game:GetService("TeleportService")
@@ -2963,6 +2876,8 @@ local function HopServer()
 		end
 	until not Cursor or foundServer
 end
+
+
 spawn(function()
 	while task.wait(1) do
 		pcall(function()
@@ -3192,6 +3107,8 @@ Callback = function(Value)
   _G.AcceptQuestC = Value
 end
 })
+
+
 CakeSM = Tabs.Main:AddToggle({
     Name = "Auto Summon Cake Prince",
     Description = "",
@@ -3216,6 +3133,8 @@ spawn(function()
         end
     end
 end)
+
+
 Tabs.Main:AddToggle({
     Name = "Auto Dough King [Fully]",
     Default = false,
@@ -3307,6 +3226,8 @@ spawn(function()
         end
     end
 end)
+
+
 Tabs.Main:AddToggle({
     Name = "Auto Farm Dough King + Hop",
     Default = false,
@@ -3314,6 +3235,8 @@ Tabs.Main:AddToggle({
         _G.AutoHop_Dough = Value
     end
 })
+
+
 local function HopServer()
     pcall(function()
         local Http = game:GetService("HttpService")
@@ -3331,6 +3254,8 @@ local function HopServer()
         end
     end)
 end
+
+
 spawn(function()
     while task.wait() do
         if _G.AutoHop_Dough then
@@ -3551,6 +3476,8 @@ spawn(function()
     end
   end
 end)
+
+
 Tabs.Main:AddSection("Tyrant of the Skies")
 
 local TyrantStatus = Tabs.Main:AddParagraph("Boss Spawn", "")
@@ -3742,6 +3669,8 @@ spawn(function()
         end
     end
 end)
+
+
 Tabs.Main:AddSection("Farm Material")
 
 Test = Tabs.Main:AddDropdown({
@@ -3788,6 +3717,8 @@ spawn(function()
     end
   end
 end)
+
+
 Tabs.Main:AddSection("Farm Boss")
 
 		BossDropdown = Tabs.Main:AddDropdown({
@@ -3868,6 +3799,8 @@ FarmBoss = Tabs.Main:AddToggle({
         end)
     end
 })
+
+
 BossQ = Tabs.Main:AddToggle({
     Name = "Accept Quests",
     Description = "",
@@ -4120,55 +4053,13 @@ spawn(function()
     end)
   end
 end)
-Tabs.Settings:AddSection("Settings Config")
--- Slider
-Tabs.Settings:AddSlider({
-    Name = "Tween Speed",
-    Min = 0,
-    Max = 1000,
-    Default = Settings["Tween Speed"],
-    Callback = function(Value)
-        Settings["Tween Speed"] = Value
-    end
-})
 
--- Toggles
-Tabs.Settings:AddToggle({
-    Name = "Bypass Teleport",
-    Description = "",
-    Default = Settings["Bypass Teleport"],
-    Callback = function(Value)
-        Settings["Bypass Teleport"] = Value
-    end
-})
 
-Tabs.Settings:AddToggle({
-    Name = "Up Y",
-    Description = "",
-    Default = Settings["Up Y"],
-    Callback = function(Value)
-        Settings["Up Y"] = Value
-    end
-})
 
-Tabs.Settings:AddToggle({
-    Name = "Up Y When Low Health",
-    Description = "",
-    Default = Settings["Up Y When Low Health"],
-    Callback = function(Value)
-        Settings["Up Y When Low Health"] = Value
-    end
-})
 
-Tabs.Settings:AddToggle({
-    Name = "Same Y",
-    Description = "",
-    Default = Settings["Same Y"],
-    Callback = function(Value)
-        Settings["Same Y"] = Value
-    end
-})
-Tabs.Settings:AddSection("Settings Player")
+
+
+Tabs.Settings:AddSection("Settings / Configure")
 
 Initialize = Tabs.Settings:AddToggle({
 Name = "Fast Attack", 
@@ -4297,7 +4188,7 @@ end)
 RaceV4Aura = Tabs.Settings:AddToggle({
 Name = "Auto Turn on Race V4", 
 Description = "", 
-Default = true, 
+Default = false,
 Callback = function(Value)
   _G.RaceClickAutov4 = Value
 end})
@@ -4314,7 +4205,7 @@ spawn(function()
 end)
 
 RandomAround = Tabs.Settings:AddToggle({
-Name = "Auto Turn on Spin xyz", 
+Name = "Auto Turn on Spin  xyz", 
 Description = "", 
 Default = false,
 Callback = function(Value)
@@ -4590,6 +4481,8 @@ BuyBaitToggle = Tabs.Fish:AddToggle({
         end
     end
 })
+
+
 task.spawn(function()
     while task.wait(2) do
         if _G.AutoBuyBait and _G.SelectedBait then
@@ -4599,6 +4492,8 @@ task.spawn(function()
         end
     end
 end)
+
+
 
 
 FishingToggle = Tabs.Fish:AddToggle({
@@ -4663,6 +4558,8 @@ task.spawn(function()
         end
     end
 end)
+
+
 FishingQ = Tabs.Fish:AddToggle({
 Name = "Auto Quest Fishing", 
 Description = "",
@@ -4670,6 +4567,8 @@ Default = false,
 Callback = function(Value)
     _G.AutoFishingQuest = Value
 end})
+
+
 local Players3 = game:GetService("Players")
 local LocalPlayer3 = Players3.LocalPlayer
 local ReplicatedStorage3 = game:GetService("ReplicatedStorage")
@@ -4694,6 +4593,8 @@ task.spawn(function()
         end
     end
 end)
+
+
 QuestToggle = Tabs.Fish:AddToggle({
     Name = "Auto Complete Quest",
     Description = "",
@@ -4708,6 +4609,8 @@ QuestToggle = Tabs.Fish:AddToggle({
         end
     end
 })
+
+
 task.spawn(function()
     while task.wait(5) do 
         if _G.AutoQuestComplete then
@@ -4717,6 +4620,8 @@ task.spawn(function()
         end
     end
 end)
+
+
 SellFishToggle = Tabs.Fish:AddToggle({
     Name = "Auto Sell Fish",
     Description = "",
@@ -4731,6 +4636,8 @@ SellFishToggle = Tabs.Fish:AddToggle({
         end
     end
 })
+
+
 task.spawn(function()
     while task.wait(5) do 
         if _G.AutoSellFish then
@@ -4740,6 +4647,8 @@ task.spawn(function()
         end
     end
 end)
+
+
 SpamSkillZ = Tabs.Fish:AddToggle({
 Name = "Auto Spam Skill Z", 
 Description = "",
@@ -4747,6 +4656,8 @@ Default = false,
 Callback = function(Value)
     _G.AutoSkillZ = Value
 end})
+
+
 local ReplicatedStorage4 = game:GetService("ReplicatedStorage")
 local RFJobToolAbilities4 = ReplicatedStorage4.Modules.Net:WaitForChild("RF/JobToolAbilities")
 
@@ -6445,6 +6356,8 @@ spawn(function()
   end
 end)
 
+
+
 Bartilo = Tabs.Quests:AddToggle({
 Name = "Auto Done Bartilo Quest", 
 Description = "", 
@@ -6585,6 +6498,10 @@ spawn(function()
     end
   end
 end)
+
+
+
+
 
 
 Tabs.Quests:AddSection("Fighting Melee Styles")
@@ -6838,6 +6755,8 @@ spawn(function()
   end
 end)
 
+
+
 Tabs.Race:AddSection("Mystic Island / Full Moon")
 local FullMOOn = Tabs.Race:AddParagraph("FullMoon Status", "")
 local Ismirage = Tabs.Race:AddParagraph("Mirage Island Status", "")
@@ -7076,6 +6995,8 @@ spawn(function()
     end
   end
 end)
+
+
 Tabs.Race:AddButton({
 Name = "Talk With Stone", 
 Description = "",
@@ -7301,6 +7222,8 @@ spawn(function()
     end)
   end
 end)
+
+
 Tabs.Race:AddSection("Trials Quest V4")
 local CheckTier = Tabs.Race:AddParagraph("Tiers V4 Status", "")
 spawn(function()
@@ -8008,6 +7931,8 @@ Tabs.Prehistoric:AddButton({
         game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(unpack(args))
     end
 })
+
+
 Tabs.Prehistoric:AddSection("Prehistoric Island")
 local Check_Volcano = Tabs.Prehistoric:AddParagraph("Prehistoric Island Status", "")
 spawn(function()
@@ -8056,6 +7981,8 @@ task.spawn(function()
         end
     end
 end)
+
+
 
 Tabs.Prehistoric:AddToggle({
     Name = "Auto Find Prehistoric Island",
@@ -8178,6 +8105,8 @@ spawn(function()
 end)
 
 
+
+
 Tabs.Prehistoric:AddToggle({
     Name = "Auto Patch Prehistoric Event",
     Description = "",
@@ -8186,6 +8115,8 @@ Tabs.Prehistoric:AddToggle({
         _G.Prehis_Skills = Value
     end
 })
+
+
 
 spawn(function()
     while task.wait(0.3) do
@@ -8237,6 +8168,8 @@ spawn(function()
         end
     end
 end)
+
+
 spawn(function()
     while task.wait(Sec) do
         if _G.Prehis_Skills then
@@ -8378,6 +8311,8 @@ end)
 Tabs.SeaEvent:AddSection("Sea Event / Setting Sail")
 local ListSeaBoat={"Guardian","PirateGrandBrigade","MarineGrandBrigade","PirateBrigade","MarineBrigade","PirateSloop","MarineSloop","Beast Hunter"}
 local ListSeaZone={"Lv 1","Lv 2","Lv 3","Lv 4","Lv 5","Lv 6","Lv Infinite"}
+
+
 Tabs.SeaEvent:AddButton({
     Name = "Remove Lighting Effect",
     Callback = function()
@@ -8462,6 +8397,8 @@ spawn(function()
 end)
 
 Tabs.SeaEvent:AddSection("Crafting Items")
+
+
 Tabs.SeaEvent:AddButton({
 Name = "Craft SharkTooth", 
 Description = "",
@@ -9061,6 +8998,8 @@ Default = false,
 Callback = function(Value)
   _G.Leviathan1 = Value
 end})
+
+
 Tabs.Esp:AddSection("Esp")
 
 function isnil(thing)
@@ -9070,9 +9009,13 @@ local function round(n)
     return math.floor(tonumber(n) + 0.5)
 end
 Number = math.random(1, 1000000)
+
+
 local plr = game:GetService('Players').LocalPlayer
 local replicated = game:GetService("ReplicatedStorage")
 local TeamSelf = plr.Team
+
+
 EspPly = function()
     for _,v in next, game.Players:GetChildren() do
         pcall(function()
@@ -9113,6 +9056,8 @@ EspPly = function()
         end)
     end
 end
+
+
 LocationEsp = function() 
     for _,v in next, workspace["_WorldOrigin"].Locations:GetChildren() do
         pcall(function()
@@ -9147,6 +9092,8 @@ LocationEsp = function()
         end)
     end
 end
+
+
 DevEsp = function()
     for i,v in next, workspace:GetChildren() do
         pcall(function()
@@ -9181,6 +9128,8 @@ DevEsp = function()
         end)
     end
 end
+
+
 flowerEsp = function()
     for i,v in pairs(workspace:GetChildren()) do
         pcall(function()
@@ -9219,6 +9168,8 @@ flowerEsp = function()
         end)
     end
 end
+
+
 EventIslandEsp = function()
     for i, v in pairs(workspace._WorldOrigin.Locations:GetChildren()) do
         pcall(function()
@@ -9253,6 +9204,8 @@ EventIslandEsp = function()
         end)
     end
 end
+
+
 gearEsp = function()
     for _,v in pairs(workspace.Map.MysticIsland:GetDescendants()) do
         pcall(function()
@@ -9287,6 +9240,8 @@ gearEsp = function()
         end)
     end
 end
+
+
 AdvanFruitEsp = function()
     if advanEsp then     
         for _,v in pairs(replicated.NPCs:GetChildren()) do
@@ -9330,6 +9285,8 @@ AdvanFruitEsp = function()
         end    
     end
 end
+
+
 HakiClorEsp = function()
     if ColorEsp then     
         for _,v in pairs(replicated.NPCs:GetChildren()) do
@@ -9373,6 +9330,8 @@ HakiClorEsp = function()
         end    
     end
 end
+
+
 LegenSword = function()
     if LegenS then     
         for _,v in pairs(replicated.NPCs:GetChildren()) do
@@ -9416,6 +9375,8 @@ LegenSword = function()
         end    
     end
 end
+
+
 ChestEsp = function()
     if ChestESP then
         local CollectionService = game:GetService("CollectionService")
@@ -9470,6 +9431,8 @@ ChestEsp = function()
         end
     end
 end
+
+
 berriesEsp = function()
     if BerryEsp then
         local CollectionService = game:GetService("CollectionService")
@@ -9529,44 +9492,8 @@ berriesEsp = function()
         end
     end
 end
-Tabs.Wedhook:AddSection("Wedhook Island") 
 
-Tabs.Wedhook:AddToggle({
-    Name = "Wedhook Find Kitsune Island [Soon]",
-    Description = "",
-    Default = false,
-    Callback = function(Value)
-    end
-}) 
-Tabs.Wedhook:AddToggle({
-    Name = "Wedhook Find Prehistoric Islands [Soon]",
-    Description = "",
-    Default = false,
-    Callback = function(Value)
-    end
-}) 
-Tabs.Wedhook:AddToggle({
-    Name = "Wedhook Find Frozen Dimension [Soon]",
-    Description = "",
-    Default = false,
-    Callback = function(Value)
-    end
-}) 
-Tabs.Wedhook:AddToggle({
-    Name = "Wedhook Find Mirage Islands [Soon]",
-    Description = "",
-    Default = false,
-    Callback = function(Value)
-    end
-}) 
 
-Tabs.Wedhook:AddTextBox({
-    Name = "Url Your Wedhook",
-    Placeholder = "",
-    ClearOnFocus = true,
-    Callback = function(Value)
-    end
-})
 Tabs.Esp:AddToggle({
     Name = "Esp Berry",
     Description = "",
@@ -9897,6 +9824,8 @@ end)
 pcall(function()
     stockParagraph:SetDesc(getFruitStock())
 end)
+
+
 RandomFF = Tabs.Raids:AddToggle({
 Name = "Auto Random Fruit", 
 Description = "", 
@@ -10077,6 +10006,8 @@ Callback = function()
     end    
   end
 end})
+
+
 AutoChipBeli = Tabs.Raids:AddToggle({
     Name = "Auto Buy Chip [Beli]",
     Description = "",
@@ -10097,6 +10028,8 @@ task.spawn(function()
         end
     end
 end)
+
+
 AutoChipFruit = Tabs.Raids:AddToggle({
     Name = "Auto Buy Chip [Devil Fruit]",
     Description = "",
@@ -10128,6 +10061,8 @@ task.spawn(function()
         end
     end
 end)
+
+
 StartR = Tabs.Raids:AddToggle({
     Name = "Auto Start Raid",
     Description = "",
@@ -10204,6 +10139,8 @@ spawn(function()
         local hum = char:FindFirstChildOfClass("Humanoid")
         if not root or not hum or hum.Health <= 0 then continue end
         if hum.Sit or hum.PlatformStand or root.Anchored then continue end
+
+
         local closestDist = 999999
         for _,name in ipairs(islands) do
             local loc = locations:FindFirstChild(name)
@@ -10219,6 +10156,8 @@ spawn(function()
         if not currentIsland then continue end
         local islandPos = locations:FindFirstChild(currentIsland)
         if not islandPos then continue end
+
+
         local foundEnemies = false
         for _,mob in ipairs(workspace.Enemies:GetChildren()) do
             local eh = mob:FindFirstChild("Humanoid")
@@ -10233,6 +10172,8 @@ spawn(function()
                 end
             end
         end
+
+
         if not foundEnemies then
             local idx = table.find(islands, currentIsland)
             if idx and islands[idx+1] then
@@ -10411,6 +10352,8 @@ spawn(function()
         end)
     end
 end)
+
+
 Tabs.Raids:AddToggle({
     Name = "TP Exit (1)",
     Default = false,
@@ -10418,6 +10361,8 @@ Tabs.Raids:AddToggle({
         _G.TPFloor1 = v
     end
 })
+
+
 local tp1Done = false
 
 local function GetCurrentFloor()
@@ -10576,6 +10521,10 @@ task.spawn(function()
     end
 end)
 
+
+
+
+
 Tabs.Combat:AddSection("Combat / AimBot")
 
 local __indexPlayer = Tabs.Combat:AddParagraph("All Players On Server", "")
@@ -10620,6 +10569,8 @@ spawn(function()
         end)
     end
 end)
+
+
 local PlrList = {}   
 for _, v in pairs(game:GetService("Players"):GetChildren()) do
     table.insert(PlrList, v.Name)
@@ -10779,6 +10730,8 @@ Tabs.Combat:AddToggle({
         _G.AutoReceivePlayerQuest = Value
     end
 })
+
+
 spawn(function()
     while task.wait(1) do
         if _G.AutoReceivePlayerQuest then
@@ -10788,6 +10741,8 @@ spawn(function()
         end
     end
 end)
+
+
 Tabs.Combat:AddToggle({
     Name = "Auto Kill Player Quest", 
     Default = false,
@@ -10829,6 +10784,10 @@ spawn(function()
     end
 end)
 
+
+
+
+
 Tabs.Combat:AddToggle({
     Name = "Auto Enable PvP",
     Description = "",
@@ -10837,6 +10796,8 @@ Tabs.Combat:AddToggle({
         _G.AutoPvP = Value
     end
 })
+
+
 spawn(function()
     while task.wait(0.5) do
         if _G.AutoPvP then
@@ -10980,6 +10941,7 @@ local function toggleFly(value)
                 return
             end
             
+      
             for _, part in ipairs(player.Character:GetDescendants()) do
                 if part:IsA("BasePart") and part.CanCollide then
                     part.CanCollide = false
@@ -11038,6 +11000,8 @@ player.CharacterAdded:Connect(function(character)
         toggleFly(true)
     end
 end)
+
+
 Tabs.Combat:AddToggle({
     Name = "Enable Fly",
     Default = false,
@@ -11171,6 +11135,8 @@ spawn(function()
         end
     end
 end)
+
+
 Tabs.Travel:AddSection("Travel - Worlds")
 
 Tabs.Travel:AddButton({
@@ -11425,6 +11391,8 @@ Description = "",
 Callback = function()
   replicated.Remotes.CommF_:InvokeServer("Ectoplasm","Buy", 2)
 end})
+
+
 
 Tabs.Shop:AddSection("Weapon World1")
 Tabs.Shop:AddButton({
@@ -11962,6 +11930,8 @@ Callback = function(Value)
   end  
 end
 })
+
+
 DayN = Tabs.Misc:AddDropdown({
 Name = "Select Time",
 Description = "",
@@ -11973,7 +11943,7 @@ end})
 dayornight = Tabs.Misc:AddToggle({
 Name = "Turn on Time", 
 Description = "", 
-Default = Day,
+Default = false,
 Callback = function(Value)
   _G.daylightN = Value
 end})
@@ -12030,6 +12000,340 @@ spawn(function()
     end
   end
 end)
+local player = game.Players.LocalPlayer
+local function IsEntityAlive(entity)
+    if not entity then return false end
+    local humanoid = entity:FindFirstChild("Humanoid")
+    return humanoid and humanoid.Health > 0
+end
+local function GetEnemiesInRange(character, range)
+    local enemies = game:GetService("Workspace").Enemies:GetChildren()
+    local players = game:GetService("Players"):GetPlayers()
+    local targets = {}
+    local playerPos = character:GetPivot().Position
+    for _, enemy in ipairs(enemies) do
+        local rootPart = enemy:FindFirstChild("HumanoidRootPart")
+        if rootPart and IsEntityAlive(enemy) then
+            local distance = (rootPart.Position - playerPos).Magnitude
+            if distance <= range then
+                table.insert(targets, enemy)
+            end
+        end
+    end
+    for _, otherPlayer in ipairs(players) do
+        if otherPlayer ~= player and otherPlayer.Character then
+            local rootPart = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if rootPart and IsEntityAlive(otherPlayer.Character) then
+                local distance = (rootPart.Position - playerPos).Magnitude
+                if distance <= range then
+                    table.insert(targets, otherPlayer.Character)
+                end
+            end
+        end
+    end
+    return targets
+end
+function AttackNoCoolDown()
+    local player = game:GetService("Players").LocalPlayer
+    local character = player.Character
+    if not character then return end
+    local equippedWeapon = nil
+    for _, item in ipairs(character:GetChildren()) do
+        if item:IsA("Tool") then
+            equippedWeapon = item
+            break
+        end
+    end
+    if not equippedWeapon then return end
+    local enemiesInRange = GetEnemiesInRange(character, 60)
+    if #enemiesInRange == 0 then return end
+    local storage = game:GetService("ReplicatedStorage")
+    local modules = storage:FindFirstChild("Modules")
+    if not modules then return end
+    local attackEvent = storage:WaitForChild("Modules"):WaitForChild("Net"):WaitForChild("RE/RegisterAttack")
+    local hitEvent = storage:WaitForChild("Modules"):WaitForChild("Net"):WaitForChild("RE/RegisterHit")
+    if not attackEvent or not hitEvent then return end
+    local targets, mainTarget = {}, nil
+    for _, enemy in ipairs(enemiesInRange) do
+        if not enemy:GetAttribute("IsBoat") then
+            local HitboxLimbs = {"RightLowerArm", "RightUpperArm", "LeftLowerArm", "LeftUpperArm", "RightHand", "LeftHand"}
+            local head = enemy:FindFirstChild(HitboxLimbs[math.random(#HitboxLimbs)]) or enemy.PrimaryPart
+            if head then
+                table.insert(targets, { enemy, head })
+                mainTarget = head
+            end
+        end
+    end
+    if not mainTarget then return end
+    attackEvent:FireServer(0)
+    local playerScripts = player:FindFirstChild("PlayerScripts")
+    if not playerScripts then return end
+    local localScript = playerScripts:FindFirstChildOfClass("LocalScript")
+    while not localScript do
+        playerScripts.ChildAdded:Wait()
+        localScript = playerScripts:FindFirstChildOfClass("LocalScript")
+    end
+    local hitFunction
+    if getsenv then
+        local success, scriptEnv = pcall(getsenv, localScript)
+        if success and scriptEnv then
+            hitFunction = scriptEnv._G.SendHitsToServer
+        end
+    end
+    local successFlags, combatRemoteThread = pcall(function()
+        return require(modules.Flags).COMBAT_REMOTE_THREAD or false
+    end)
+    if successFlags and combatRemoteThread and hitFunction then
+        hitFunction(mainTarget, targets)
+    elseif successFlags and not combatRemoteThread then
+        hitEvent:FireServer(mainTarget, targets)
+    end
+end
+CameraShakerR = require(game.ReplicatedStorage.Util.CameraShaker)
+CameraShakerR:Stop()
+get_Monster=function()for a,b in pairs(workspace.Enemies:GetChildren())do local c=b:FindFirstChild("UpperTorso")or b:FindFirstChild("Head")if b:FindFirstChild("HumanoidRootPart",true)and c then if(b.Head.Position-plr.Character.HumanoidRootPart.Position).Magnitude<=50 then return true,c.Position end end end;for a,d in pairs(workspace.SeaBeasts:GetChildren())do if d:FindFirstChild("HumanoidRootPart")and d:FindFirstChild("Health")and d.Health.Value>0 then return true,d.HumanoidRootPart.Position end end;for a,d in pairs(workspace.Enemies:GetChildren())do if d:FindFirstChild("Health")and d.Health.Value>0 and d:FindFirstChild("VehicleSeat")then return true,d.Engine.Position end end end
+Actived=function()local a=game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool")for b,c in next,getconnections(a.Activated)do if typeof(c.Function)=='function'then getupvalues(c.Function)end end end
+task.spawn(function()
+  RunSer.Heartbeat:Connect(function()
+    pcall(function()      
+      if not _G.Seriality then return end      
+      AttackNoCoolDown() 
+      local Pretool = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool")
+      local ToolTip = Pretool.ToolTip
+      local MobAura, Mon = get_Monster()      
+      if ToolTip == "Blox Fruit" then
+        if MobAura then           
+          local LeftClickRemote = Pretool:FindFirstChild('LeftClickRemote');
+          if LeftClickRemote then Actived() LeftClickRemote:FireServer(Vector3.new(0.01,-500,0.01),1,true);LeftClickRemote:FireServer(false)end
+        end     		                         
+      end      
+    end)
+  end)
+end)
+local FastAttackModule = {}
+local HitRegistrationModule = {}
+local MainController = {}
+
+local GameService = game
+local Players = GameService:GetService("Players")
+local RunService = GameService:GetService("RunService")
+local ReplicatedStorage = GameService:GetService("ReplicatedStorage")
+local Workspace = GameService:GetService("Workspace")
+
+local LocalPlayer = Players.LocalPlayer
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+
+local function SafeWaitForChild(parent, childName)
+    local success, result = pcall(function()
+        return parent:WaitForChild(childName)
+    end)
+    return result
+end
+
+local Enemies = SafeWaitForChild(Workspace, "Enemies")
+local Characters = SafeWaitForChild(Workspace, "Characters")
+local Modules = SafeWaitForChild(ReplicatedStorage, "Modules")
+local Net = SafeWaitForChild(Modules, "Net")
+
+FastAttackModule.Rate = 0.000000002
+FastAttackModule.Enabled = true
+
+function FastAttackModule.IsAlive(target)
+    local humanoid = target:FindFirstChild("Humanoid")
+    if humanoid and humanoid.Health > 0 then
+        return true
+    end
+    return false
+end
+
+function FastAttackModule.GetNearbyTargets(character, folder)
+    local characterPosition = character:GetPivot().Position
+    local nearbyTargets = {}
+    local children = folder:GetChildren()
+    
+    for i = 1, #children do
+        local target = children[i]
+        local humanoid = target:FindFirstChild("Humanoid")
+        local rootPart = target:FindFirstChild("HumanoidRootPart")
+        
+        if humanoid and rootPart and humanoid.Health > 0 then
+            local distance = (rootPart.Position - characterPosition).Magnitude
+            if distance <= 60 then
+                table.insert(nearbyTargets, target)
+            end
+        end
+    end
+    return nearbyTargets
+end
+
+function FastAttackModule.GetTargetParts(targetList)
+    local result = {}
+    local count = #targetList
+    
+    for i = 1, count do
+        local target = targetList[i]
+        local head = target:FindFirstChild("Head") or target.PrimaryPart
+        if head then
+            table.insert(result, {target, head})
+        end
+    end
+    return result
+end
+
+function FastAttackModule.GetAllTargets(character)
+    local enemies = FastAttackModule.GetNearbyTargets(character, Enemies)
+    local otherCharacters = FastAttackModule.GetNearbyTargets(character, Characters)
+    
+    local allTargets = {}
+    for i = 1, #enemies do
+        table.insert(allTargets, enemies[i])
+    end
+    for i = 1, #otherCharacters do
+        table.insert(allTargets, otherCharacters[i])
+    end
+    return allTargets
+end
+
+function FastAttackModule.ExecuteFastAttack()
+    local character = LocalPlayer.Character
+    if not character then return end
+    
+    local tool = character:FindFirstChildOfClass("Tool")
+    if not tool then return end
+    
+    local targets = FastAttackModule.GetAllTargets(character)
+    if #targets < 1 then return end
+    
+    local targetParts = FastAttackModule.GetTargetParts(targets)
+    if #targetParts < 1 then return end
+    
+    local attackRemote = Net["RE/RegisterAttack"]
+    local hitRemote = Net["RE/RegisterHit"]
+    
+    attackRemote:FireServer(FastAttackModule.Rate)
+    local targetHead = targetParts[1][2]
+    hitRemote:FireServer(targetHead, targetParts)
+end
+
+local AttackRemoteTarget
+local AttackRemoteId
+
+local function InitializeHitRegistration()
+    local foldersToCheck = {
+        ReplicatedStorage.Util,
+        ReplicatedStorage.Common,
+        ReplicatedStorage.Remotes,
+        ReplicatedStorage.Assets,
+        ReplicatedStorage.FX
+    }
+
+    for _, folder in ipairs(foldersToCheck) do
+        local children = folder:GetChildren()
+        
+        for _, child in ipairs(children) do
+            if child:IsA("RemoteEvent") and child:GetAttribute("Id") then
+                AttackRemoteTarget = child
+                AttackRemoteId = child:GetAttribute("Id")
+            end
+        end
+
+        folder.ChildAdded:Connect(function(child)
+            if child:IsA("RemoteEvent") and child:GetAttribute("Id") then
+                AttackRemoteTarget = child
+                AttackRemoteId = child:GetAttribute("Id")
+            end
+        end)
+    end
+end
+
+InitializeHitRegistration()
+
+function HitRegistrationModule.Execute()
+    local character = LocalPlayer.Character
+    if not character then return end
+    
+    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+    if not humanoidRootPart then return end
+    
+    local hitTargets = {}
+
+    local function ScanFolder(folder)
+        local children = folder:GetChildren()
+        for i = 1, #children do
+            local target = children[i]
+            local humanoid = target:FindFirstChild("Humanoid")
+            local rootPart = target:FindFirstChild("HumanoidRootPart")
+            
+            if humanoid and rootPart and humanoid.Health > 0 and target ~= character then
+                local distance = (rootPart.Position - humanoidRootPart.Position).Magnitude
+                if distance <= 60 then
+                    local targetChildren = target:GetChildren()
+                    for _, child in ipairs(targetChildren) do
+                        if child:IsA("BasePart") then
+                            table.insert(hitTargets, {target, child})
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    ScanFolder(Enemies)
+    ScanFolder(Characters)
+
+    local tool = character:FindFirstChildOfClass("Tool")
+    
+    if #hitTargets > 0 and tool and (tool:GetAttribute("WeaponType") == "Melee" or tool:GetAttribute("WeaponType") == "Sword") then
+        local seed = Modules.Net.seed:InvokeServer()
+        
+        local attackRemote = Net["RE/RegisterAttack"]
+        local hitRemote = Net["RE/RegisterHit"]
+        
+        attackRemote:FireServer()
+        
+        local targetHead = hitTargets[1][1]:FindFirstChild("Head")
+        if not targetHead then return end
+
+        hitRemote:FireServer(targetHead, hitTargets, {})
+        
+        if AttackRemoteTarget then
+            local remoteCode = "RE/RegisterHit"
+            local encryptionKey = math.floor(Workspace:GetServerTimeNow() / 10 % 10) + 1
+            
+            local encodedString = string.gsub(remoteCode, ".", function(char)
+                return string.char(bit32.bxor(string.byte(char), encryptionKey))
+            end)
+
+            local finalId = bit32.bxor(AttackRemoteId + 909090, seed * 2)
+            
+            cloneref(AttackRemoteTarget):FireServer(
+                encodedString,
+                finalId,
+                targetHead,
+                hitTargets
+            )
+        end
+    end
+end
+
+local function DisableCameraShake()
+    local cameraModule = require(ReplicatedStorage.Util.CameraShaker)
+    cameraModule:Stop()
+end
+
+local function StartMainLoops()
+    task.spawn(function()
+        while task.wait(FastAttackModule.Rate) do
+            FastAttackModule.ExecuteFastAttack()
+        end
+    end)
+
+    RunService.Heartbeat:Connect(function()
+        pcall(HitRegistrationModule.Execute)
+    end)
+end
+
+StartMainLoops()
 
 local function getBeastHunter()
     local character = LocalPlayer.Character
@@ -12059,7 +12363,7 @@ local function getLeviathanHeart()
     end
     return nil, nil
 end
-
+ 
 Window:Notify({ 
   Title = "DIO hub",
   Content = "DIO Hub Load....",
