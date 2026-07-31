@@ -1410,11 +1410,11 @@ QuestNeta = function()
     }
 end
 
-local redzlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/tlredz/Library/refs/heads/main/redz-V5-remake/main.luau"))()
+local redzlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/thidinh240581-maker/Test/refs/heads/main/librarydiofind(Copy).luau"))()
 local Window = redzlib:MakeWindow({
     Title = "DIO Hub ",
-    SubTitle = "DIO Remake Script",
-    SaveFolder = "taynaiget.json"
+    SubTitle = "DIO Loader Script | Blox Fruit",
+    SaveFolder = "dio.json"
 })
 
 local Minimizer = Window:NewMinimizer({
@@ -9492,7 +9492,6 @@ berriesEsp = function()
         end
     end
 end
-
 
 Tabs.Esp:AddToggle({
     Name = "Esp Berry",
