@@ -1428,21 +1428,21 @@ local MobileButton = Minimizer:CreateMobileMinimizer({
 
 local Tabs = {
     Status = Window:MakeTab({ Title = "Info Discord", Icon = "Info" }), 
-    Info = Window:MakeTab({ Title = "Tab Status Server", Icon = "crown" }),
-    Main = Window:MakeTab({ Title = "Tab Farming", Icon = "rbxassetid://7733960981" }),
-    Hop = Window:MakeTab({ Title = "Tab FPS Boost", Icon = "locate" }),
-    Settings = Window:MakeTab({ Title = "Tab Setting", Icon = "rbxassetid://7734053495" }),
-    Fish = Window:MakeTab({ Title = "Tab Fishing", Icon = "rbxassetid://127664059821666" }),
-    Quests = Window:MakeTab({ Title = "Tab Quest And Item", Icon = "rbxassetid://13075622619" }),
-    SeaEvent = Window:MakeTab({ Title = "Tab Sea Event", Icon = "waves" }),
-    Race = Window:MakeTab({ Title = "Tab Mirage And Race", Icon = "rbxassetid://11162889532" }),
-    Prehistoric = Window:MakeTab({ Title = "Tab Prehistoric Event", Icon = "tent" }),
-    Esp = Window:MakeTab({ Title = "Tab Stats And Esp", Icon = "rbxassetid://7040410130" }),
-    Raids = Window:MakeTab({ Title = "Tab Fruit And Raid", Icon = "rbxassetid://11155986081" }),
-    Combat = Window:MakeTab({ Title = "Tab Local Player", Icon = "rbxassetid://13075651575" }),
-    Travel = Window:MakeTab({ Title = "Tab Teleport Island", Icon = "locate" }),
-    Shop = Window:MakeTab({ Title = "Tab Shopping", Icon = "rbxassetid://6031265976" }),
-    Misc = Window:MakeTab({ Title = "Tab Miscellaneous", Icon = "rbxassetid://10709783577" })
+    Info = Window:MakeTab({ Title = "Status Server", Icon = "crown" }),
+    Hop = Window:MakeTab({ Title = " Remove graphics", Icon = "locate" }),
+    Settings = Window:MakeTab({ Title = "Setting", Icon = "rbxassetid://7734053495" }),
+    Main = Window:MakeTab({ Title = "Farming", Icon = "rbxassetid://7733960981" }),
+    Quests = Window:MakeTab({ Title = "Quest And Item", Icon = "rbxassetid://13075622619" }),
+    SeaEvent = Window:MakeTab({ Title = "Sea Event", Icon = "waves" }),
+    Race = Window:MakeTab({ Title = "Mirage And Race", Icon = "rbxassetid://11162889532" }),
+    Prehistoric = Window:MakeTab({ Title = "Prehistoric Event", Icon = "tent" }),
+    Fish = Window:MakeTab({ Title = "Fishing", Icon = "rbxassetid://127664059821666" }),
+    Esp = Window:MakeTab({ Title = "Stats And Esp", Icon = "rbxassetid://7040410130" }),
+    Raids = Window:MakeTab({ Title = "Fruit And Raid", Icon = "rbxassetid://11155986081" }),
+    Combat = Window:MakeTab({ Title = "Local Player", Icon = "rbxassetid://13075651575" }),
+    Travel = Window:MakeTab({ Title = "Teleport Island", Icon = "locate" }),
+    Shop = Window:MakeTab({ Title = "Shopping", Icon = "rbxassetid://6031265976" }),
+    Misc = Window:MakeTab({ Title = "Miscellaneous", Icon = "rbxassetid://10709783577" })
 }
 
 Tabs.Status:AddSection("Information")
@@ -1465,110 +1465,10 @@ Tabs.Status:AddDiscordInvite({
 	Members = 3774, 
 	Online = 1006, 
 })
+
 Tabs.Info:AddSection("Status Server")
 
 Tabs.Hop:AddSection("Fps Booster")
-
--- =================== PHẦN HOP SPAM 0.1 GIÂY ===================
-local IsHopping = false
-
-local HopToggle = Tabs.Hop:AddToggle({
-    Name = "only this toggle can't use",
-    Default = false,
-    Callback = function(Value)
-        IsHopping = Value
-
-        if IsHopping then
-            print("[Hop] Bắt đầu vòng lặp tìm Full Moon...")
-            task.spawn(function()
-                local visited = _G.VisitedFullMoonServers or {}
-                _G.VisitedFullMoonServers = visited
-
-                while IsHopping do
-                    local HttpService = game:GetService("HttpService")
-                    local ReplicatedStorage = game:GetService("ReplicatedStorage")
-                    local TeleportService = game:GetService("TeleportService")
-                    local TeleportRemote = ReplicatedStorage:WaitForChild("__ServerBrowser")
-
-                    local request_fn = (syn and syn.request)
-                        or http_request
-                        or request
-                        or (fluxus and fluxus.request)
-                        or (http and http.request)
-
-                    if not request_fn then
-                        warn("[Hop] Executor không hỗ trợ request!")
-                        IsHopping = false
-                        if HopToggle and HopToggle.Set then HopToggle:Set(false) end
-                        break
-                    end
-
-                    local API = "https://Diooooo/"
-                    local ok, res = pcall(function()
-                        return request_fn({
-                            Url = API,
-                            Method = "GET",
-                            Headers = {["User-Agent"] = "Roblox" }
-                        })
-                    end)
-
-                    if ok and res then
-                        local success, body = pcall(function()
-                            return HttpService:JSONDecode(res.Body)
-                        end)
-                        if success and body then
-                            local server_list = body.all_servers or body.moon_data or body.servers
-                            if server_list and type(server_list) == "table" then
-                                local full_moon_servers = {}
-                                for _, v in ipairs(server_list) do
-                                    local job = tostring(v.jobid or v.jobId or v.id or "")
-                                    local isFullMoon = v.type == "FullMoon" or (v.name and string.find(v.name, "FullMoon"))
-                                    if #job > 10 and job ~= game.JobId and not visited[job] and isFullMoon then
-                                        table.insert(full_moon_servers, job)
-                                    end
-                                end
-                                if #full_moon_servers > 0 then
-                                    local selected = full_moon_servers[math.random(1, #full_moon_servers)]
-                                    print(".", selected)
-                                    visited[selected] = true
-
-                                    -- Hiển thị thông báo với jobid
-                                    Window:Notify({
-                                        Title = " DIO hub",
-                                        Content = "Đã vào server: " .. selected,
-                                        Image = "rbxassetid://105848560127717",
-                                        Duration = 5
-                                    })
-
-                                    -- Teleport
-                                    local teleport_ok = pcall(function()
-                                        TeleportRemote:InvokeServer("teleport", selected)
-                                    end)
-                                    if not teleport_ok then
-                                        pcall(function()
-                                            TeleportService:TeleportToPlaceInstance(game.PlaceId, selected, game.Players.LocalPlayer)
-                                        end)
-                                    end
-                                    print("l.")
-                                else
-                                    print(".")
-                                end
-                            end
-                        end
-                    end
-                    task.wait(0.1) -- Chờ 0.1 giây, spam cực nhanh
-                end
-
-                print(".")
-                if HopToggle and HopToggle.Set then
-                    HopToggle:Set(false)
-                end
-            end)
-        else
-            print(".")
-        end
-    end
-})
 
 local TimeZone = Tabs.Info:AddParagraph("Time Zone", "")
 
