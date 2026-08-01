@@ -8766,6 +8766,7 @@ task.spawn(function()
                         local humanoid = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
                         if not humanoid then return end
 
+                        -- [FIX] Chỉ fly nếu đang ngồi đúng ghế thuyền
                         if humanoid.SeatPart ~= vehicleSeat then
                             if not humanoid.Sit then
                                 _tp(vehicleSeat.CFrame * CFrame.new(0, 1, 0))
@@ -8775,6 +8776,7 @@ task.spawn(function()
 
                         local root = myBoat.PrimaryPart or vehicleSeat
 
+                        -- Dọn BodyInstance cũ nếu còn sót
                         for _, v in pairs(root:GetChildren()) do
                             if v:IsA("BodyVelocity") or v:IsA("BodyPosition") or v:IsA("BodyGyro") then
                                 v:Destroy()
@@ -8794,7 +8796,6 @@ task.spawn(function()
 
                         flyingActive = true
                         local isIslandSpawned = false
-                        local brokeFromSeat = false  -- FIX: theo dõi lý do break
 
                         pcall(function()
                             repeat
@@ -8805,10 +8806,8 @@ task.spawn(function()
                                 if not root or not root.Parent then break end
 
                                 local curHum = plr.Character:FindFirstChildOfClass("Humanoid")
-                                if not curHum or curHum.SeatPart ~= vehicleSeat then
-                                    brokeFromSeat = true  -- FIX: đánh dấu rơi khỏi ghế
-                                    break
-                                end
+                                -- [FIX] Rơi khỏi ghế → thoát fly ngay, cleanup bên dưới sẽ trả vật lý
+                                if not curHum or curHum.SeatPart ~= vehicleSeat then break end
 
                                 stabilizer.CFrame = CFrame.new(root.Position, Vector3.new(-10000000, root.Position.Y, 37016.25))
 
@@ -8817,9 +8816,12 @@ task.spawn(function()
                                     targetY = 300
                                 end
 
-                                local newY = root.Position.Y + (targetY - root.Position.Y) * 0.4
-                                root.CFrame = CFrame.new(root.Position.X, newY, root.Position.Z)
-                                _tp(CFrame.new(-10000000, newY, 37016.25))
+                                -- [FIX] Proportional velocity control thay vì set CFrame trực tiếp
+                                -- → BodyVelocity và physics không đánh nhau → hết giật
+                                local yDiff = targetY - root.Position.Y
+                                antiGravity.Velocity = Vector3.new(0, math.clamp(yDiff * 3, -40, 40), 0)
+
+                                _tp(CFrame.new(-10000000, root.Position.Y, 37016.25))
 
                                 isIslandSpawned = false
                                 for _, name in ipairs({"Frozen Dimension", "LeviathanGate", "Leviathan Island"}) do
@@ -8832,25 +8834,26 @@ task.spawn(function()
                             until isIslandSpawned
                         end)
 
-                        if brokeFromSeat then
-                            pcall(function()
-                                for i = 1, 25 do
+                        -- [FIX] Hạ thuyền mượt về Y≈31 dù break vì lý do gì (tắt toggle, rơi ghế, island found)
+                        -- Dùng velocity để hạ → không conflict physics, không lún
+                        pcall(function()
+                            if root and root.Parent then
+                                for _ = 1, 60 do
                                     if not root or not root.Parent then break end
-                                    local newY = root.Position.Y + (31 - root.Position.Y) * 0.35
-                                    root.CFrame   = CFrame.new(root.Position.X, newY, root.Position.Z)
-                                    root.Velocity = Vector3.new(0, 0, 0)
                                     if math.abs(root.Position.Y - 31) < 1 then break end
+                                    antiGravity.Velocity = Vector3.new(0, math.clamp((31 - root.Position.Y) * 5, -100, 30), 0)
                                     task.wait(0.05)
                                 end
-                            end)
-                        end
+                                antiGravity.Velocity = Vector3.new(0, 0, 0)
+                            end
+                        end)
 
-                        -- Cleanup: thuyền đã ở Y=31 → destroy an toàn
+                        -- [FIX] Trả vật lý hoàn toàn cho thuyền, về trạng thái bình thường
                         pcall(function()
                             if root and root.Parent then
                                 root.Velocity    = Vector3.new(0, 0, 0)
                                 root.RotVelocity = Vector3.new(0, 0, 0)
-                                root.CFrame      = CFrame.new(root.Position.X, 30, root.Position.Z)
+                                root.CFrame      = CFrame.new(root.Position.X, 31, root.Position.Z)
                             end
                         end)
                         pcall(function() antiGravity:Destroy() end)
