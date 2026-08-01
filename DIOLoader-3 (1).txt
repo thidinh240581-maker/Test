@@ -8828,6 +8828,9 @@ task.spawn(function()
                             until isIslandSpawned
                         end)
 
+                        -- FIX BUG 1 & 2: Unified smooth descent cho MỌI lý do thoát
+                        -- (rơi khỏi ghế, tắt toggle, hay tìm thấy đảo)
+                        -- antiGravity còn sống trong suốt quá trình → thuyền không rơi tự do
                         pcall(function()
                             local WATER_Y = 31
                             for _ = 1, 120 do  -- tối đa 12 giây
@@ -8839,6 +8842,8 @@ task.spawn(function()
                                     stabilizer.CFrame = CFrame.new(root.Position)
                                 end
 
+                                -- Tốc độ hạ tỉ lệ với chiều cao, giảm dần khi gần mặt nước
+                                -- Tối đa 70 studs/s xuống, nhẹ dần khi tiếp cận Y=31
                                 local speed = math.max(-70, (WATER_Y - root.Position.Y) * 1.5)
                                 antiGravity.Velocity = Vector3.new(0, speed, 0)
                                 task.wait(0.1)
@@ -8851,6 +8856,8 @@ task.spawn(function()
                             end
                         end)
 
+                        -- FIX BUG 2: Chỉ destroy lực, KHÔNG set Velocity/RotVelocity
+                        -- Set Velocity = 0 trên client sẽ lock cứng physics thuyền!
                         pcall(function() antiGravity:Destroy() end)
                         pcall(function() stabilizer:Destroy() end)
                         flyingActive = false
@@ -8865,6 +8872,7 @@ task.spawn(function()
         end
     end
 end)
+
 
 Tabs.SeaEvent:AddToggle({
 Name = "Auto Teleport Frozen Dimension", 
