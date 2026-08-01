@@ -8895,7 +8895,7 @@ task.spawn(function()
                         _tp(CFrame.new(-10000000, 300, 37016.25))
                     else
                         root.CFrame = CFrame.new(root.Position.X, 150, root.Position.Z)
-                        _tp(CFrame.new(-10000000, 150, 37016.25))
+                        _tp(CFrame.new(-10000000, 180, 37016.25))
                     end 
                     
                     isIslandSpawned = false
