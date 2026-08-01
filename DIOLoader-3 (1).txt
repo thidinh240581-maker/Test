@@ -7,7 +7,7 @@ fpsGui.Name = "FPS_Display_80"
 
 local fpsLabel = Instance.new("TextLabel", fpsGui)
 fpsLabel.Position = UDim2.new(0, 10, 0, 10)
-fpsLabel.Size = UDim2.new(0, 200, 0, 30) -- tăng width để chứa cả Ping
+fpsLabel.Size = UDim2.new(0, 180, 0, 30) -- tăng width để chứa cả Ping
 fpsLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 fpsLabel.BackgroundTransparency = 0.4
 fpsLabel.TextColor3 = Color3.new(1, 1, 1)
@@ -1033,16 +1033,59 @@ _tp = function(target)
         block.CFrame = CFrame.new(block.Position.X, gg.Y, block.Position.Z)
     end  
     
+    -- ==========================================
+    -- HIỆU ỨNG CAMERA DELAY & TĂNG TỐC ĐỘ (FOV)
+    -- ==========================================
+    local camera = workspace.CurrentCamera
+    local runService = game:GetService("RunService")
+    local camConnection = nil
+    
+    -- Hàm reset Camera về trạng thái mặc định của game
+    local function resetCamera()
+        if camConnection then 
+            camConnection:Disconnect() 
+            camConnection = nil 
+        end
+        camera.CameraType = Enum.CameraType.Custom
+        camera.CameraSubject = plr.Character:FindFirstChild("Humanoid")
+        -- Trả lại góc nhìn bình thường mượt mà
+        game:GetService("TweenService"):Create(camera, TweenInfo.new(0.5), {FieldOfView = 70}):Play()
+    end
+
+    -- Chuyển Camera sang chế độ Script để tự điều khiển
+    camera.CameraType = Enum.CameraType.Scriptable
+    
+    -- Vòng lặp cập nhật Camera liên tục tạo hiệu ứng delay
+    camConnection = runService.RenderStepped:Connect(function()
+        -- Vị trí Camera mong muốn (phía sau nhân vật 25 stud, cao 10 stud)
+        local targetCamOffset = block.CFrame * CFrame.new(0, 10, 25)
+        
+        -- Dùng Lerp để Camera di chuyển theo với độ trễ (0.08)
+        -- Thông số này càng nhỏ (ví dụ 0.05), camera càng bay chậm lại so với nhân vật
+        local lerpFactor = 0.08
+        camera.CFrame = camera.CFrame:Lerp(CFrame.new(targetCamOffset.Position, block.Position), lerpFactor)
+        
+        -- Kéo giãn góc nhìn để tạo cảm giác bay xé gió
+        camera.FieldOfView = camera.FieldOfView + (110 - camera.FieldOfView) * 0.1
+    end)
+    -- ==========================================
+    
     tween:Play()    
     
     task.spawn(function() 
         while tween.PlaybackState == Enum.PlaybackState.Playing do 
             if not shouldTween then 
                 tween:Cancel() 
+                resetCamera() -- Trả lại Camera nếu tween bị hủy ngang
                 break 
             end 
             task.wait(0.1) 
         end 
+    end)
+    
+    -- Trả lại Camera khi bay tới đích thành công
+    tween.Completed:Connect(function()
+        resetCamera()
     end)
     
     return tween
@@ -8895,8 +8938,8 @@ task.spawn(function()
                         _tp(CFrame.new(-10000000, 300, 37016.25))
                     else
                         root.CFrame = CFrame.new(root.Position.X, 150, root.Position.Z)
-                        _tp(CFrame.new(-10000000, 180, 37016.25))
-                    end 
+                        _tp(CFrame.new(-10000000, 150, 37016.25))
+                    end
                     
                     isIslandSpawned = false
                     for _, name in ipairs({"Frozen Dimension", "LeviathanGate", "Leviathan Island"}) do
@@ -8908,6 +8951,11 @@ task.spawn(function()
 
                   until not _G.FrozenDimension or isIslandSpawned or not root.Parent or plr.Character.Humanoid.Sit == false
                   
+                  -- Hạ thuyền về mực nước trước khi destroy force
+                  if root and root.Parent then
+                      root.CFrame = CFrame.new(root.Position.X, 31, root.Position.Z)
+                  end
+
                   pcall(function() antiGravity:Destroy() end)
                   pcall(function() stabilizer:Destroy() end)
               end
