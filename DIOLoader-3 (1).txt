@@ -8794,7 +8794,6 @@ task.spawn(function()
 
                         flyingActive = true
                         local isIslandSpawned = false
-                        local brokeFromSeat = false  -- FIX: theo dõi lý do break
 
                         pcall(function()
                             repeat
@@ -8805,10 +8804,7 @@ task.spawn(function()
                                 if not root or not root.Parent then break end
 
                                 local curHum = plr.Character:FindFirstChildOfClass("Humanoid")
-                                if not curHum or curHum.SeatPart ~= vehicleSeat then
-                                    brokeFromSeat = true  -- FIX: đánh dấu rơi khỏi ghế
-                                    break
-                                end
+                                if not curHum or curHum.SeatPart ~= vehicleSeat then break end
 
                                 stabilizer.CFrame = CFrame.new(root.Position, Vector3.new(-10000000, root.Position.Y, 37016.25))
 
@@ -8832,29 +8828,29 @@ task.spawn(function()
                             until isIslandSpawned
                         end)
 
-                        -- FIX: Rơi khỏi ghế → hạ thuyền từ từ về Y=31
-                        -- antiGravity vẫn còn sống → thuyền không rơi tự do
-                        if brokeFromSeat then
-                            pcall(function()
-                                for i = 1, 25 do
-                                    if not root or not root.Parent then break end
-                                    local newY = root.Position.Y + (31 - root.Position.Y) * 0.35
-                                    root.CFrame   = CFrame.new(root.Position.X, newY, root.Position.Z)
-                                    root.Velocity = Vector3.new(0, 0, 0)
-                                    if math.abs(root.Position.Y - 31) < 1 then break end
-                                    task.wait(0.05)
-                                end
-                            end)
-                        end
-
-                        -- Cleanup: thuyền đã ở Y=31 → destroy an toàn
                         pcall(function()
+                            local WATER_Y = 31
+                            for _ = 1, 120 do  -- tối đa 12 giây
+                                if not root or not root.Parent then break end
+                                if root.Position.Y <= WATER_Y + 2 then break end
+
+                                -- Giữ thuyền thẳng đứng trong lúc hạ
+                                if stabilizer and stabilizer.Parent then
+                                    stabilizer.CFrame = CFrame.new(root.Position)
+                                end
+
+                                local speed = math.max(-70, (WATER_Y - root.Position.Y) * 1.5)
+                                antiGravity.Velocity = Vector3.new(0, speed, 0)
+                                task.wait(0.1)
+                            end
+
+                            -- Dừng lại khi đến mặt nước
                             if root and root.Parent then
-                                root.Velocity    = Vector3.new(0, 0, 0)
-                                root.RotVelocity = Vector3.new(0, 0, 0)
-                                root.CFrame      = CFrame.new(root.Position.X, 31, root.Position.Z)
+                                antiGravity.Velocity = Vector3.new(0, 0, 0)
+                                task.wait(0.1)
                             end
                         end)
+
                         pcall(function() antiGravity:Destroy() end)
                         pcall(function() stabilizer:Destroy() end)
                         flyingActive = false
@@ -8869,6 +8865,7 @@ task.spawn(function()
         end
     end
 end)
+
 Tabs.SeaEvent:AddToggle({
 Name = "Auto Teleport Frozen Dimension", 
 Description = "", 
