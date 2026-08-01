@@ -8749,135 +8749,122 @@ task.spawn(function()
                     end
                 end
 
-                -- Đảo đảo rồi → tp thẳng, không cần fly
-                if foundName then
-                    local targetIsland = workspace.Map:FindFirstChild(foundName, true) or workspace["_WorldOrigin"].Locations:FindFirstChild(foundName, true)
-                    if targetIsland and targetIsland:FindFirstChild("Center") then
-                        _tp(targetIsland.Center.CFrame * CFrame.new(0, 300, 0))
-                    end
-                    return
-                end
-
-                local myBoat = CheckBoat()
-                if not myBoat then
-                    local buyBoatCFrame = CFrame.new(-16927.451, 9.086, 433.864)
-                    TeleportToTarget(buyBoatCFrame)
-                    task.wait(2)
-                    if not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") then return end
-                    if (buyBoatCFrame.Position - plr.Character.HumanoidRootPart.Position).Magnitude <= 10 then
-                        replicated.Remotes.CommF_:InvokeServer("BuyBoat", _G.SelectedBoat)
-                    end
-                    return
-                end
-
-                local vehicleSeat = myBoat:FindFirstChildOfClass("VehicleSeat")
-                if not vehicleSeat then return end
-
-                local humanoid = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
-                if not humanoid then return end
-
-                local root = myBoat.PrimaryPart or vehicleSeat
-
-                -- KHÔNG ngồi thuyền → trả vật lý ngay, không fly
-                if humanoid.SeatPart ~= vehicleSeat then
-                    for _, v in pairs(root:GetChildren()) do
-                        if v:IsA("BodyVelocity") or v:IsA("BodyPosition") or v:IsA("BodyGyro") then
-                            v:Destroy()
+                if not foundName then
+                    local myBoat = CheckBoat()
+                    if not myBoat then
+                        local buyBoatCFrame = CFrame.new(-16927.451, 9.086, 433.864)
+                        TeleportToTarget(buyBoatCFrame)
+                        task.wait(2)
+                        if not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") then return end
+                        if (buyBoatCFrame.Position - plr.Character.HumanoidRootPart.Position).Magnitude <= 10 then
+                            replicated.Remotes.CommF_:InvokeServer("BuyBoat", _G.SelectedBoat)
                         end
-                    end
-                    if not humanoid.Sit then
-                        _tp(vehicleSeat.CFrame * CFrame.new(0, 1, 0))
-                    end
-                    return
-                end
+                    else
+                        local vehicleSeat = myBoat:FindFirstChildOfClass("VehicleSeat")
+                        if not vehicleSeat then return end
 
-                -- ĐANG ngồi thuyền → dọn physics cũ (nếu còn sót) rồi bắt đầu fly
-                for _, v in pairs(root:GetChildren()) do
-                    if v:IsA("BodyVelocity") or v:IsA("BodyPosition") or v:IsA("BodyGyro") then
-                        v:Destroy()
-                    end
-                end
+                        local humanoid = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
+                        if not humanoid then return end
 
-                local antiGravity = Instance.new("BodyVelocity")
-                antiGravity.MaxForce = Vector3.new(0, 1e5, 0)
-                antiGravity.Velocity  = Vector3.new(0, 0, 0)
-                antiGravity.Parent    = root
-
-                local stabilizer = Instance.new("BodyGyro")
-                stabilizer.MaxTorque = Vector3.new(1e5, 1e5, 1e5)
-                stabilizer.D         = 500
-                stabilizer.CFrame    = root.CFrame
-                stabilizer.Parent    = root
-
-                flyingActive = true
-                local isIslandSpawned = false
-                local needLand = false  -- cần hạ thuyền: rơi ghế HOẶC tắt toggle
-
-                pcall(function()
-                    repeat
-                        task.wait(0.1)
-
-                        if not _G.FrozenDimension then needLand = true; break end
-                        if not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") then needLand = true; break end
-                        if not root or not root.Parent then break end
-
-                        local curHum = plr.Character:FindFirstChildOfClass("Humanoid")
-                        if not curHum or curHum.SeatPart ~= vehicleSeat then
-                            needLand = true
-                            break
-                        end
-
-                        stabilizer.CFrame = CFrame.new(root.Position, Vector3.new(-10000000, root.Position.Y, 37016.25))
-
-                        local targetY = 150
-                        if CheckEnemiesBoat() or CheckTerrorShark() or CheckPirateGrandBrigade() or CheckSeaBeast() or CheckHauntedCrew() or CheckFishCrew() or CheckPiranha() or CheckShark() then
-                            targetY = 300
-                        end
-
-                        local newY = root.Position.Y + (targetY - root.Position.Y) * 0.4
-                        root.CFrame = CFrame.new(root.Position.X, newY, root.Position.Z)
-                        _tp(CFrame.new(-10000000, newY, 37016.25))
-
-                        isIslandSpawned = false
-                        for _, name in ipairs({"Frozen Dimension", "LeviathanGate", "Leviathan Island"}) do
-                            if workspace["_WorldOrigin"].Locations:FindFirstChild(name, true) then
-                                isIslandSpawned = true
-                                break
+                        if humanoid.SeatPart ~= vehicleSeat then
+                            if not humanoid.Sit then
+                                _tp(vehicleSeat.CFrame * CFrame.new(0, 1, 0))
                             end
+                            return
                         end
 
-                    until isIslandSpawned
-                end)
+                        local root = myBoat.PrimaryPart or vehicleSeat
 
-                -- Hạ thuyền mượt về Y=31 khi tắt toggle hoặc rơi khỏi ghế
-                -- antiGravity vẫn còn → thuyền không rơi tự do trong lúc hạ
-                if needLand then
-                    pcall(function()
-                        for i = 1, 30 do
-                            if not root or not root.Parent then break end
-                            local newY = root.Position.Y + (31 - root.Position.Y) * 0.35
-                            root.CFrame = CFrame.new(root.Position.X, newY, root.Position.Z)
-                            if math.abs(root.Position.Y - 31) < 1 then break end
-                            task.wait(0.05)
-                        end
-                    end)
-                end
-
-                -- Cleanup hoàn toàn: destroy controllers, quét sạch mọi thứ còn sót
-                pcall(function() antiGravity:Destroy() end)
-                pcall(function() stabilizer:Destroy() end)
-                pcall(function()
-                    if root and root.Parent then
                         for _, v in pairs(root:GetChildren()) do
                             if v:IsA("BodyVelocity") or v:IsA("BodyPosition") or v:IsA("BodyGyro") then
                                 v:Destroy()
                             end
                         end
-                        root.CFrame = CFrame.new(root.Position.X, 31, root.Position.Z)
-                    end
-                end)
 
-                flyingActive = false
+                        local antiGravity = Instance.new("BodyVelocity")
+                        antiGravity.MaxForce = Vector3.new(0, 1e5, 0)
+                        antiGravity.Velocity  = Vector3.new(0, 0, 0)
+                        antiGravity.Parent    = root
+
+                        local stabilizer = Instance.new("BodyGyro")
+                        stabilizer.MaxTorque = Vector3.new(1e5, 1e5, 1e5)
+                        stabilizer.D         = 500
+                        stabilizer.CFrame    = root.CFrame
+                        stabilizer.Parent    = root
+
+                        flyingActive = true
+                        local isIslandSpawned = false
+                        local brokeFromSeat = false  -- FIX: theo dõi lý do break
+
+                        pcall(function()
+                            repeat
+                                task.wait(0.1)
+
+                                if not _G.FrozenDimension then break end
+                                if not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") then break end
+                                if not root or not root.Parent then break end
+
+                                local curHum = plr.Character:FindFirstChildOfClass("Humanoid")
+                                if not curHum or curHum.SeatPart ~= vehicleSeat then
+                                    brokeFromSeat = true  -- FIX: đánh dấu rơi khỏi ghế
+                                    break
+                                end
+
+                                stabilizer.CFrame = CFrame.new(root.Position, Vector3.new(-10000000, root.Position.Y, 37016.25))
+
+                                local targetY = 150
+                                if CheckEnemiesBoat() or CheckTerrorShark() or CheckPirateGrandBrigade() or CheckSeaBeast() or CheckHauntedCrew() or CheckFishCrew() or CheckPiranha() or CheckShark() then
+                                    targetY = 300
+                                end
+
+                                local newY = root.Position.Y + (targetY - root.Position.Y) * 0.4
+                                root.CFrame = CFrame.new(root.Position.X, newY, root.Position.Z)
+                                _tp(CFrame.new(-10000000, newY, 37016.25))
+
+                                isIslandSpawned = false
+                                for _, name in ipairs({"Frozen Dimension", "LeviathanGate", "Leviathan Island"}) do
+                                    if workspace["_WorldOrigin"].Locations:FindFirstChild(name, true) then
+                                        isIslandSpawned = true
+                                        break
+                                    end
+                                end
+
+                            until isIslandSpawned
+                        end)
+
+                        -- FIX: Rơi khỏi ghế → hạ thuyền từ từ về Y=31
+                        -- antiGravity vẫn còn sống → thuyền không rơi tự do
+                        if brokeFromSeat then
+                            pcall(function()
+                                for i = 1, 25 do
+                                    if not root or not root.Parent then break end
+                                    local newY = root.Position.Y + (31 - root.Position.Y) * 0.35
+                                    root.CFrame   = CFrame.new(root.Position.X, newY, root.Position.Z)
+                                    root.Velocity = Vector3.new(0, 0, 0)
+                                    if math.abs(root.Position.Y - 31) < 1 then break end
+                                    task.wait(0.05)
+                                end
+                            end)
+                        end
+
+                        -- Cleanup: thuyền đã ở Y=31 → destroy an toàn
+                        pcall(function()
+                            if root and root.Parent then
+                                root.Velocity    = Vector3.new(0, 0, 0)
+                                root.RotVelocity = Vector3.new(0, 0, 0)
+                                root.CFrame      = CFrame.new(root.Position.X, 31, root.Position.Z)
+                            end
+                        end)
+                        pcall(function() antiGravity:Destroy() end)
+                        pcall(function() stabilizer:Destroy() end)
+                        flyingActive = false
+                    end
+                else
+                    local targetIsland = workspace.Map:FindFirstChild(foundName, true) or workspace["_WorldOrigin"].Locations:FindFirstChild(foundName, true)
+                    if targetIsland and targetIsland:FindFirstChild("Center") then
+                        _tp(targetIsland.Center.CFrame * CFrame.new(0, 300, 0))
+                    end
+                end
             end)
         end
     end
