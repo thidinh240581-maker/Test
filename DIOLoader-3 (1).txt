@@ -8775,14 +8775,19 @@ task.spawn(function()
 
                         local root = myBoat.PrimaryPart or vehicleSeat
 
+                        -- LƯU ĐỘNG CƠ GỐC: Xóa Y-Lock cũ (nếu có) và cất động cơ đi
+                        local originalMovers = {}
                         for _, v in pairs(root:GetChildren()) do
-                            if v:IsA("BodyVelocity") or v:IsA("BodyPosition") or v:IsA("BodyGyro") then
-                                v:Destroy()
+                            if v.Name == "BoatYLock" then
+                                v:Destroy() -- Xóa khóa Y của lần bay trước
+                            elseif v:IsA("BodyVelocity") or v:IsA("BodyPosition") or v:IsA("BodyGyro") or v:IsA("LinearVelocity") or v:IsA("AngularVelocity") then
+                                table.insert(originalMovers, {Obj = v, Parent = v.Parent})
+                                v.Parent = nil -- Ẩn đi tạm thời
                             end
                         end
 
                         local antiGravity = Instance.new("BodyVelocity")
-                        antiGravity.MaxForce = Vector3.new(0, 1e5, 0)
+                        antiGravity.MaxForce = Vector3.new(1e5, 1e5, 1e5)
                         antiGravity.Velocity  = Vector3.new(0, 0, 0)
                         antiGravity.Parent    = root
 
@@ -8794,7 +8799,6 @@ task.spawn(function()
 
                         flyingActive = true
                         local isIslandSpawned = false
-                        local brokeFromSeat = false  -- FIX: theo dõi lý do break
 
                         pcall(function()
                             repeat
@@ -8806,8 +8810,7 @@ task.spawn(function()
 
                                 local curHum = plr.Character:FindFirstChildOfClass("Humanoid")
                                 if not curHum or curHum.SeatPart ~= vehicleSeat then
-                                    brokeFromSeat = true  -- FIX: đánh dấu rơi khỏi ghế
-                                    break
+                                    break -- Rơi khỏi ghế thì break luôn
                                 end
 
                                 stabilizer.CFrame = CFrame.new(root.Position, Vector3.new(-10000000, root.Position.Y, 37016.25))
@@ -8832,31 +8835,50 @@ task.spawn(function()
                             until isIslandSpawned
                         end)
 
-                        -- FIX: Rơi khỏi ghế → hạ thuyền từ từ về Y=31
-                        -- antiGravity vẫn còn sống → thuyền không rơi tự do
-                        if brokeFromSeat then
-                            pcall(function()
-                                for i = 1, 25 do
-                                    if not root or not root.Parent then break end
-                                    local newY = root.Position.Y + (31 - root.Position.Y) * 0.35
-                                    root.CFrame   = CFrame.new(root.Position.X, newY, root.Position.Z)
-                                    root.Velocity = Vector3.new(0, 0, 0)
-                                    if math.abs(root.Position.Y - 31) < 1 then break end
-                                    task.wait(0.05)
-                                end
-                            end)
-                        end
-
-                        -- Cleanup: thuyền đã ở Y=31 → destroy an toàn
+                        -- KHI KẾT THÚC BAY: Hạ dần xuống 30 rồi khóa Y lại
                         pcall(function()
                             if root and root.Parent then
-                                root.Velocity    = Vector3.new(0, 0, 0)
-                                root.RotVelocity = Vector3.new(0, 0, 0)
-                                root.CFrame      = CFrame.new(root.Position.X, 31, root.Position.Z)
+                                local startY = root.Position.Y
+                                if startY > 35 then
+                                    for i = 1, 20 do
+                                        if not root or not root.Parent then break end
+                                        local currentY = root.Position.Y
+                                        local newY = currentY + (30 - currentY) * 0.4 -- Từ từ hạ xuống Y=30
+                                        root.CFrame = CFrame.new(root.Position.X, newY, root.Position.Z)
+                                        root.Velocity = Vector3.new(0, 0, 0)
+                                        if math.abs(root.Position.Y - 30) < 1 then break end
+                                        task.wait(0.05)
+                                    end
+                                end
+
+                                -- TẠO Y-LOCK (Ý tưởng của bạn)
+                                local yLock = Instance.new("BodyPosition")
+                                yLock.Name = "BoatYLock"
+                                yLock.MaxForce = Vector3.new(0, 1e5, 0) -- Quan trọng: X và Z bằng 0 để thuyền vẫn rẽ được
+                                yLock.Position = Vector3.new(0, 30, 0)  -- Luôn giữ thuyền ở cao độ 30
+                                yLock.D = 500
+                                yLock.Parent = root
                             end
                         end)
+
+                        -- CLEANUP: Trả lại mọi thứ về nguyên trạng
                         pcall(function() antiGravity:Destroy() end)
                         pcall(function() stabilizer:Destroy() end)
+
+                        pcall(function()
+                            if root and root.Parent then
+                                root.Velocity = Vector3.new(0, 0, 0)
+                                root.RotVelocity = Vector3.new(0, 0, 0)
+                                
+                                -- Trả lại động cơ gốc để thuyền chạy được bằng W A S D
+                                for _, moverData in ipairs(originalMovers) do
+                                    if moverData.Obj then
+                                        moverData.Obj.Parent = moverData.Parent
+                                    end
+                                end
+                            end
+                        end)
+
                         flyingActive = false
                     end
                 else
@@ -8869,7 +8891,6 @@ task.spawn(function()
         end
     end
 end)
-
 Tabs.SeaEvent:AddToggle({
 Name = "Auto Teleport Frozen Dimension", 
 Description = "", 
