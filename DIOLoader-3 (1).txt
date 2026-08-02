@@ -688,6 +688,7 @@ task.spawn(function()while task.wait()do if block and block.Parent==workspace th
 task.spawn(function()local a=game.Players.LocalPlayer;repeat task.wait()until a.Character and a.Character.PrimaryPart;block.CFrame=a.Character.PrimaryPart.CFrame;while task.wait()do pcall(function()if getgenv().OnFarm then if block and block.Parent==workspace then local b=a.Character and a.Character.PrimaryPart;if b and(b.Position-block.Position).Magnitude<=200 then b.CFrame=block.CFrame else block.CFrame=b.CFrame end end;local c=a.Character;if c then for d,e in pairs(c:GetChildren())do if e:IsA("BasePart")then e.CanCollide=false end end end else local c=a.Character;if c then for d,e in pairs(c:GetChildren())do if e:IsA("BasePart")then e.CanCollide=true end end end end end)end end)
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local CommF = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommF_")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
@@ -9988,21 +9989,30 @@ Tabs.Raids:AddToggle({
         getgenv().AutoGetFruit = Value
     end
 })
+
 spawn(function()
-    while task.wait() do
+    local fruits = {
+        "Rocket-Rocket", "Spin-Spin", "Chop-Chop", "Spring-Spring", "Bomb-Bomb", "Smoke-Smoke",
+        "Spike-Spike", "Flame-Flame", "Falcon-Falcon", "Ice-Ice", "Sand-Sand", "Dark-Dark",
+        "Ghost-Ghost", "Diamond-Diamond", "Light-Light", "Rubber-Rubber", "Barrier-Barrier"
+    }
+
+    while task.wait(0.5) do -- Có thể để delay ngắn hơn một chút vì check client-side rất nhẹ
         pcall(function()
             if getgenv().AutoGetFruit then
-                local fruits = {
-                    "Rocket-Rocket", "Spin-Spin", "Chop-Chop", "Spring-Spring", "Bomb-Bomb", "Smoke-Smoke",
-                    "Spike-Spike", "Flame-Flame", "Falcon-Falcon", "Ice-Ice", "Sand-Sand", "Dark-Dark",
-                    "Ghost-Ghost", "Diamond-Diamond", "Light-Light", "Rubber-Rubber", "Barrier-Barrier"
-                }
-                for _, fruit in ipairs(fruits) do
-                    local args = {
-                        [1] = "LoadFruit",
-                        [2] = fruit
-                    }
-                    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(unpack(args))
+                for _, targetFruit in ipairs(fruits) do
+                    -- Sử dụng function check inventory mới
+                    if CheckInventoryNew(targetFruit) then
+                        -- Bắn remote lấy trái ra nếu hàm check trả về true
+                        local args = {
+                            [1] = "LoadFruit",
+                            [2] = targetFruit
+                        }
+                        CommF:InvokeServer(unpack(args))
+                        
+                        task.wait(1.5) -- Vẫn cần delay 1.5s sau khi LẤY TRÁI RA để tránh lỗi mất đồ
+                        break -- Ngắt vòng lặp hiện tại để xử lý trái vừa lấy (hoặc chờ lấy xong mới lặp tiếp)
+                    end
                 end
             end
         end)
@@ -12391,6 +12401,34 @@ local function getLeviathanHeart()
     return nil, nil
 end
  
+local function CheckInventoryNew(name)
+    if ItemReplicationService and ItemReplicationService.IsInitialized then
+        local ItemData = {}
+        local Items = ItemReplicationService:GetItems(KEYS.QUANTITY)
+        
+        for _, v in pairs(Items) do
+            local success, dataItem = pcall(function()
+                return v.ItemId.getDataFromId(v.ItemId):unwrap()
+            end)
+            
+            if success and dataItem then
+                table.insert(ItemData, {
+                    Name = dataItem.StorageKey,
+                    Count = v.Value or 0,
+                    Type = dataItem.Type
+                })
+            end
+        end
+        
+        for _, v in pairs(ItemData) do
+            if v and v.Name == name and v.Count >= 1 then
+                return true
+            end
+        end
+    end
+    return false
+end
+
 Window:Notify({ 
   Title = "DIO hub",
   Content = "DIO Hub Load....",
