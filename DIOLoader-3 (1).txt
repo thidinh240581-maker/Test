@@ -8737,23 +8737,30 @@ Tabs.SeaEvent:AddToggle({
 task.spawn(function()
     local flyingActive = false
 
-    -- [OPT] Khai báo 1 lần ngoài loop, tránh tạo table mỗi vòng lặp
-    local islandNames = {"Frozen Dimension", "LeviathanGate", "Leviathan Island"}
-
     while task.wait(1) do
         if _G.FrozenDimension and not flyingActive then
             pcall(function()
                 if not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") then return end
 
-                local foundName = nil
-                for _, name in ipairs(islandNames) do
-                    if workspace["_WorldOrigin"].Locations:FindFirstChild(name, true) or workspace.Map:FindFirstChild(name, true) then
-                        foundName = name
-                        break
+                -- GHÉP THẲNG TÌM ĐẢO (Không quét sâu rùa bò để giữ 100% FPS)
+                local targetIsland = nil
+                local locations = workspace:FindFirstChild("_WorldOrigin") and workspace["_WorldOrigin"]:FindFirstChild("Locations")
+                
+                if locations then
+                    for _, name in ipairs({"Frozen Dimension", "LeviathanGate", "Leviathan Island"}) do
+                        targetIsland = locations:FindFirstChild(name)
+                        if targetIsland then break end
+                    end
+                end
+                
+                if not targetIsland and workspace:FindFirstChild("Map") then
+                    for _, name in ipairs({"Frozen Dimension", "LeviathanGate", "Leviathan Island"}) do
+                        targetIsland = workspace.Map:FindFirstChild(name)
+                        if targetIsland then break end
                     end
                 end
 
-                if not foundName then
+                if not targetIsland then
                     local myBoat = CheckBoat()
                     if not myBoat then
                         local buyBoatCFrame = CFrame.new(-16927.451, 9.086, 433.864)
@@ -8779,9 +8786,9 @@ task.spawn(function()
 
                         local root = myBoat.PrimaryPart or vehicleSeat
 
-                        -- Xóa Y-Lock cũ và cất động cơ đi
+                        -- Cất động cơ gốc & Dọn dẹp Y-Lock cũ
                         local originalMovers = {}
-                        for _, v in pairs(root:GetChildren()) do
+                        for _, v in ipairs(root:GetChildren()) do
                             if v.Name == "BoatYLock" then
                                 v:Destroy()
                             elseif v:IsA("BodyVelocity") or v:IsA("BodyPosition") or v:IsA("BodyGyro") or v:IsA("LinearVelocity") or v:IsA("AngularVelocity") then
@@ -8803,90 +8810,89 @@ task.spawn(function()
 
                         flyingActive = true
                         local isIslandSpawned = false
-
-                        -- [OPT] Cache cho danger check, chỉ gọi 8 hàm mỗi 0.5s thay vì mỗi 0.1s
-                        local lastDangerTime = 0
-                        local cachedDanger   = false
-
-                        -- [OPT] Cache cho teleport, chỉ gọi khi Y đổi >5 units hoặc mỗi 0.5s
-                        local lastTpTime = 0
-                        local lastTpY    = 0
+                        local lastIslandScan = 0
 
                         pcall(function()
                             repeat
-                                task.wait(0.3) -- [OPT] 0.1 → 0.3: giảm 3x số lần chạy/giây
+                                task.wait(0.15) 
 
                                 if not _G.FrozenDimension then break end
                                 if not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") then break end
                                 if not root or not root.Parent then break end
 
                                 local curHum = plr.Character:FindFirstChildOfClass("Humanoid")
-                                if not curHum or curHum.SeatPart ~= vehicleSeat then break end
+                                if not curHum or curHum.SeatPart ~= vehicleSeat then
+                                    break
+                                end
 
                                 stabilizer.CFrame = CFrame.new(root.Position, Vector3.new(-10000000, root.Position.Y, 37016.25))
 
-                                -- [OPT] Cache danger check 0.5s: giảm từ 80 lần/s xuống 2 lần/s
-                                local now = tick()
-                                if now - lastDangerTime >= 0.5 then
-                                    cachedDanger = CheckEnemiesBoat() or CheckTerrorShark()
-                                        or CheckPirateGrandBrigade() or CheckSeaBeast()
-                                        or CheckHauntedCrew() or CheckFishCrew()
-                                        or CheckPiranha() or CheckShark()
-                                    lastDangerTime = now
+                                local targetY = 150
+                                if CheckTerrorShark or CheckSeaBeast or CheckEnemiesBoat then
+                                    if (CheckTerrorShark and CheckTerrorShark()) or (CheckSeaBeast and CheckSeaBeast()) or (CheckEnemiesBoat and CheckEnemiesBoat()) then
+                                        targetY = 300
+                                    end
                                 end
 
-                                local targetY = cachedDanger and 300 or 150
+                                local newY = root.Position.Y + (targetY - root.Position.Y) * 0.3
+                                root.CFrame = CFrame.new(root.Position.X, newY, root.Position.Z)
+                                _tp(CFrame.new(-10000000, newY, 37016.25))
 
-                                -- [OPT] Dùng Velocity thay vì set CFrame trực tiếp → không còn physics conflict
-                                local dy = targetY - root.Position.Y
-                                antiGravity.Velocity = Vector3.new(0, math.clamp(dy * 3, -60, 60), 0)
-
-                                -- [OPT] Chỉ teleport khi Y thay đổi >5 units hoặc sau 0.5s
-                                if now - lastTpTime >= 0.5 or math.abs(root.Position.Y - lastTpY) > 5 then
-                                    _tp(CFrame.new(-10000000, root.Position.Y, 37016.25))
-                                    lastTpTime = now
-                                    lastTpY    = root.Position.Y
-                                end
-
-                                -- Check island spawn (vẫn check mỗi 0.3s vì đây là điều kiện thoát loop)
-                                for _, name in ipairs(islandNames) do
-                                    if workspace["_WorldOrigin"].Locations:FindFirstChild(name, true) then
-                                        isIslandSpawned = true
-                                        break
+                                -- GIẢM TẢI FPS: Quét tìm đảo mỗi 1.5 giây một lần ngay trong lặp
+                                if tick() - lastIslandScan >= 1.5 then
+                                    lastIslandScan = tick()
+                                    
+                                    local locs = workspace:FindFirstChild("_WorldOrigin") and workspace["_WorldOrigin"]:FindFirstChild("Locations")
+                                    if locs then
+                                        for _, name in ipairs({"Frozen Dimension", "LeviathanGate", "Leviathan Island"}) do
+                                            if locs:FindFirstChild(name) then
+                                                isIslandSpawned = true
+                                                break
+                                            end
+                                        end
+                                    end
+                                    
+                                    if not isIslandSpawned and workspace:FindFirstChild("Map") then
+                                        for _, name in ipairs({"Frozen Dimension", "LeviathanGate", "Leviathan Island"}) do
+                                            if workspace.Map:FindFirstChild(name) then
+                                                isIslandSpawned = true
+                                                break
+                                            end
+                                        end
                                     end
                                 end
 
                             until isIslandSpawned
                         end)
 
-                        -- ====== BUG FIX: CHỐNG MẤT THUYỀN KHI Ở XA ======
+                        -- ====== HẠ CẢNH AN TOÀN - CHỐNG MẤT THUYỀN ======
                         pcall(function()
                             if root and root.Parent then
                                 local yLock = Instance.new("BodyPosition")
-                                yLock.Name     = "BoatYLock"
+                                yLock.Name = "BoatYLock"
                                 yLock.MaxForce = Vector3.new(0, math.huge, 0)
-                                yLock.Position = Vector3.new(0, 35, 0)
-                                yLock.D        = 800
-                                yLock.Parent   = root
+                                yLock.Position = Vector3.new(0, 35, 0) 
+                                yLock.D = 800
+                                yLock.Parent = root
 
                                 if root.Position.Y > 50 then
                                     root.CFrame = CFrame.new(root.Position.X, 40, root.Position.Z)
                                 end
                             end
                         end)
-                        -- ===================================================
+                        -- ===============================================
 
-                        -- CLEANUP: Hủy bay và trả lại động cơ
-                        pcall(function() antiGravity:Destroy() end)
-                        pcall(function() stabilizer:Destroy() end)
+                        -- CLEANUP: Xóa mover tạm & Khôi phục lại động cơ cũ
+                        if antiGravity then antiGravity:Destroy() end
+                        if stabilizer then stabilizer:Destroy() end
 
                         pcall(function()
                             if root and root.Parent then
-                                root.Velocity    = Vector3.new(0, 0, 0)
+                                root.Velocity = Vector3.new(0, 0, 0)
                                 root.RotVelocity = Vector3.new(0, 0, 0)
-
+                                
                                 for _, moverData in ipairs(originalMovers) do
-                                    if moverData.Obj then
+                                    if moverData.Obj and moverData.Obj.Parent == nil then
                                         moverData.Obj.Parent = moverData.Parent
                                     end
                                 end
@@ -8894,19 +8900,17 @@ task.spawn(function()
                         end)
 
                         flyingActive = false
-                    end
+                    end 
                 else
-                    local targetIsland = workspace.Map:FindFirstChild(foundName, true)
-                        or workspace["_WorldOrigin"].Locations:FindFirstChild(foundName, true)
-                    if targetIsland and targetIsland:FindFirstChild("Center") then
-                        _tp(targetIsland.Center.CFrame * CFrame.new(0, 300, 0))
+                    local targetPos = targetIsland:FindFirstChild("Center") or targetIsland.PrimaryPart
+                    if targetPos then
+                        _tp(targetPos.CFrame * CFrame.new(0, 300, 0))
                     end
                 end
             end)
         end
     end
 end)
-
 Tabs.SeaEvent:AddToggle({
 Name = "Auto Teleport Frozen Dimension", 
 Description = "", 
