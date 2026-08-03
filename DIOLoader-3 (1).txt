@@ -8836,33 +8836,27 @@ task.spawn(function()
                             until isIslandSpawned
                         end)
 
-                        -- KHI KẾT THÚC BAY: Hạ dần xuống 30 rồi khóa Y lại
+                        -- ====== BUG FIX MỚI (CHỐNG MẤT THUYỀN KHI Ở XA) ======
                         pcall(function()
                             if root and root.Parent then
-                                local startY = root.Position.Y
-                                if startY > 35 then
-                                    for i = 1, 20 do
-                                        if not root or not root.Parent then break end
-                                        local currentY = root.Position.Y
-                                        local newY = currentY + (30 - currentY) * 0.4 -- Từ từ hạ xuống Y=30
-                                        root.CFrame = CFrame.new(root.Position.X, newY, root.Position.Z)
-                                        root.Velocity = Vector3.new(0, 0, 0)
-                                        if math.abs(root.Position.Y - 30) < 1 then break end
-                                        task.wait(0.05)
-                                    end
-                                end
-
-                                -- TẠO Y-LOCK (Ý tưởng của bạn)
+                                -- 1. Gắn Y-Lock ngay lập tức để Server ghi nhận (để ở Y = 35 chống sóng to ngoài khơi)
                                 local yLock = Instance.new("BodyPosition")
                                 yLock.Name = "BoatYLock"
-                                yLock.MaxForce = Vector3.new(0, 1e5, 0) -- Quan trọng: X và Z bằng 0 để thuyền vẫn rẽ được
-                                yLock.Position = Vector3.new(0, 30, 0)  -- Luôn giữ thuyền ở cao độ 30
-                                yLock.D = 500
+                                yLock.MaxForce = Vector3.new(0, math.huge, 0) -- Dùng lực cực đại cho trục Y
+                                yLock.Position = Vector3.new(0, 35, 0) 
+                                yLock.D = 800 -- Tăng độ cản (Dampening) để thuyền rơi êm
                                 yLock.Parent = root
+
+                                -- 2. Dịch chuyển thuyền xuống thẳng độ cao 40 (trước khi mất NetworkOwnership)
+                                -- Bỏ vòng lặp `for` vì vòng lặp mất thời gian gây ra lỗi rơi tự do
+                                if root.Position.Y > 50 then
+                                    root.CFrame = CFrame.new(root.Position.X, 40, root.Position.Z)
+                                end
                             end
                         end)
+                        -- ====================================================
 
-                        -- CLEANUP: Trả lại mọi thứ về nguyên trạng
+                        -- CLEANUP: Hủy bay và Trả lại động cơ
                         pcall(function() antiGravity:Destroy() end)
                         pcall(function() stabilizer:Destroy() end)
 
@@ -8881,7 +8875,7 @@ task.spawn(function()
                         end)
 
                         flyingActive = false
-                    end
+                    end 
                 else
                     local targetIsland = workspace.Map:FindFirstChild(foundName, true) or workspace["_WorldOrigin"].Locations:FindFirstChild(foundName, true)
                     if targetIsland and targetIsland:FindFirstChild("Center") then
