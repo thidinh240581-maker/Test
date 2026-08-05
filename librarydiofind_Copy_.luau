@@ -3951,9 +3951,9 @@ Color="Colors.Background"
 },
 Stroke={
 Thickness=1,
-Transparency=0.05,
+Transparency=0.25,
 ThemeTag={
-Color="Colors.Primary"
+Color="Colors.Stroke"
 }
 }
 }
@@ -3971,12 +3971,12 @@ end)
 D.Draggable(ak,ad,0.5)
 
 local glowFrame=E("Frame","GlowBorder",I,{
-Position=UDim2.new(ak.Position.X.Scale,ak.Position.X.Offset-3,ak.Position.Y.Scale,ak.Position.Y.Offset-3),
-Size=UDim2.fromOffset(ak.Size.X.Offset+6,ak.Size.Y.Offset+6),
-BackgroundTransparency=0.88,
+Position=UDim2.new(ak.Position.X.Scale,ak.Position.X.Offset-7,ak.Position.Y.Scale,ak.Position.Y.Offset-7),
+Size=UDim2.fromOffset(ak.Size.X.Offset+14,ak.Size.Y.Offset+14),
+BackgroundTransparency=0.93,
 ZIndex=0,
 Elements={Corner=UDim.new(0,12)},
-BackgroundColor3=Color3.fromRGB(255,255,255)
+ThemeTag={BackgroundColor3="Colors.Primary"}
 })
 u(n,function()
 if not ak.Parent then glowFrame.Parent=nil return end
