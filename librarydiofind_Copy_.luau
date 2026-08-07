@@ -3945,37 +3945,35 @@ Size=UDim2.new(1,0,0,28),
 BackgroundTransparency=1
 })
 
-local ao=E("TextLabel","Title",an,{
-TextXAlignment=Enum.TextXAlignment.Left,
-AutomaticSize=Enum.AutomaticSize.XY,
--- Căn giữa topbar giống Banana Cat Hub style
-Position=UDim2.new(0.5,0,0.5,0),
-AnchorPoint=Vector2.new(0.5,0.5),
-Text=ae.Title,
-TextSize=13,
-BackgroundTransparency=1,
--- Màu vàng gold giống "Banana Cat Hub" title
-TextColor3=Color3.fromRGB(255,195,50),
-ThemeTag={
-Font="Font.Bold"
-},
-Childs={
-E("TextLabel","SubTitle",{
-Size=UDim2.fromScale(0,1),
-AutomaticSize="X",
--- Căn giữa dọc, sát bên phải title
+-- SubTitle bên trái TopBar
+local aoSub=E("TextLabel","SubTitle",an,{
+Size=UDim2.new(0,0,1,0),
+AutomaticSize=Enum.AutomaticSize.X,
+Position=UDim2.new(0,10,0.5,0),
 AnchorPoint=Vector2.new(0,0.5),
-Position=UDim2.new(1,6,0.5),
-Text="- "..ae.SubTitle,
+Text=ae.SubTitle,
 BackgroundTransparency=1,
-TextXAlignment="Left",
-TextYAlignment="Center",
+TextXAlignment=Enum.TextXAlignment.Left,
 TextSize=9,
 ThemeTag={
 TextColor3="Colors.Text.Dark",
 Font="Font.Normal"
 }
 })
+
+-- Title "DIO Hub" ở giữa TopBar, bắt đầu rỗng để chạy hoạt ảnh typewriter
+-- Click vào title để mở search bar
+local ao=E("TextLabel","Title",an,{
+TextXAlignment=Enum.TextXAlignment.Center,
+Size=UDim2.new(0,140,1,0),
+Position=UDim2.new(0.5,0,0.5,0),
+AnchorPoint=Vector2.new(0.5,0.5),
+Text="",
+TextSize=13,
+BackgroundTransparency=1,
+TextColor3=Color3.fromRGB(255,195,50),
+ThemeTag={
+Font="Font.Bold"
 }
 })
 
@@ -4118,7 +4116,7 @@ u(ar.MouseEnter,function()ar.BackgroundTransparency=0.65 end)
 u(ar.MouseLeave,function()ar.BackgroundTransparency=1.00 end)
 
 as.SetUIScale=self.SetUIScale
-as.SUBTITLE_LABEL=ao.SubTitle
+as.SUBTITLE_LABEL=aoSub
 as.TITLE_LABEL=ao
 
 local aB=as:StartWindow{
@@ -4128,7 +4126,7 @@ Dropdowns=am,
 MainFrame=ak,
 TopBar=an,
 
-SubTitle=ao.SubTitle,
+SubTitle=aoSub,
 Title=ao,
 
 UIScale=ad,
@@ -4143,38 +4141,110 @@ u(ar.Activated,function()
     as:Dialog(aA)
 end)
 
--- THÊM VÀO ĐÂY
-local searchInput = E("TextBox","SearchBar",an,{
-    Size = UDim2.new(0,130,0,16),
-    Position = UDim2.new(0.5,0,0.5,0),
-    AnchorPoint = Vector2.new(0.5,0.5),
-    BorderSizePixel = 0,
-    PlaceholderText = "Search Section",
-    Text = "",
-    TextSize = 9,
-    ClearTextOnFocus = false,
-    ThemeTag = {
-        BackgroundColor3 = "Colors.Stroke",
-        TextColor3 = "Colors.Text.Default",
-        PlaceholderColor3 = "Colors.Text.Darker",
-        Font = "Font.Normal"
-    },
-    Elements = {
-        Corner = UDim.new(0,4),
-        Padding = {
-          PaddingLeft = UDim.new(0,7),
-          PaddingRight = UDim.new(0,7),
-          PaddingTop = UDim.new(0,0),
-          PaddingBottom = UDim.new(0,0)
-       }
-    }
+-- SearchBar cùng vị trí với Title, ẩn mặc định
+-- Click vào title để toggle mở search
+local searchInput=E("TextBox","SearchBar",an,{
+Size=UDim2.new(0,140,0,16),
+Position=UDim2.new(0.5,0,0.5,0),
+AnchorPoint=Vector2.new(0.5,0.5),
+BorderSizePixel=0,
+PlaceholderText="🔍 Tìm kiếm...",
+Text="",
+TextSize=9,
+ClearTextOnFocus=false,
+Visible=false,
+ThemeTag={
+BackgroundColor3="Colors.Stroke",
+TextColor3="Colors.Text.Default",
+PlaceholderColor3="Colors.Text.Darker",
+Font="Font.Normal"
+},
+Elements={
+Corner=UDim.new(0,4),
+Padding={
+PaddingLeft=UDim.new(0,7),
+PaddingRight=UDim.new(0,7),
+PaddingTop=UDim.new(0,0),
+PaddingBottom=UDim.new(0,0)
+}
+}
 })
 
-u(searchInput:GetPropertyChangedSignal"Text",function()
-    as:PerformSearch(searchInput.Text)
+-- Hoạt ảnh typewriter: gõ từng ký tự vào title
+local function typewriterPlay(label,text,speed)
+speed=speed or 0.065
+label.Text=""
+for idx=1,#text do
+label.Text=text:sub(1,idx)
+task.wait(speed)
+end
+end
+
+-- Toggle search mode
+local searchActive=false
+
+local function enterSearch()
+if searchActive then return end
+searchActive=true
+ao.Visible=false
+searchInput.Visible=true
+searchInput:CaptureFocus()
+end
+
+local function exitSearch()
+if not searchActive then return end
+searchActive=false
+searchInput.Text=""
+as:PerformSearch("")
+searchInput.Visible=false
+ao.Visible=true
+task.spawn(typewriterPlay,ao,ae.Title)
+end
+
+-- Click title → mở search
+u(ao.InputBegan,function(inp)
+if inp.UserInputType==Enum.UserInputType.MouseButton1
+or inp.UserInputType==Enum.UserInputType.Touch then
+enterSearch()
+end
 end)
 
-return as  
+-- Hover effect để gợi ý title có thể click
+u(ao.MouseEnter,function()
+J(ao,"TextTransparency",0.35,0.15):Play()
+end)
+u(ao.MouseLeave,function()
+J(ao,"TextTransparency",0,0.15):Play()
+end)
+
+-- Mất focus + text rỗng → đóng search, quay lại title
+u(searchInput.FocusLost,function()
+if searchInput.Text=="" then
+exitSearch()
+end
+end)
+
+-- ESC → thoát search
+u(i.InputBegan,function(inp,processed)
+if not processed
+and inp.KeyCode==Enum.KeyCode.Escape
+and searchActive then
+exitSearch()
+end
+end)
+
+-- Text thay đổi → lọc tab
+u(searchInput:GetPropertyChangedSignal"Text",function()
+as:PerformSearch(searchInput.Text)
+end)
+
+-- Chạy hoạt ảnh typewriter lần đầu sau khi window load xong
+task.spawn(function()
+task.wait(0.35)
+typewriterPlay(ao,ae.Title)
+end)
+
+return as
 end
 
 return s
