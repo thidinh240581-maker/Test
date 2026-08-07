@@ -90,7 +90,7 @@ Bold=Enum.Font.BuilderSansBold,
 ExtraBold=Enum.Font.BuilderSansExtraBold,
 SliderValue=Enum.Font.FredokaOne
 },
-BackgroundTransparency=0.18
+BackgroundTransparency=0.03
 }
 }
 
@@ -1134,7 +1134,7 @@ Size=UDim2.fromScale(0,1),
 Position=UDim2.fromScale(0.5,0.5),
 AnchorPoint=Vector2.new(0.5,0.5),
 Visible=false,
-PlaceholderText="Search Section And Function",
+PlaceholderText="Search...",
 ClearTextOnFocus=false,
 Text="",
 Elements={
@@ -1577,49 +1577,41 @@ end
 end
 
 function ah:AddSection(av)
-    assert(av==nil or type(av)=="string",`"Tab.AddSection[param 1]". 'string', or 'nil' expected, got {typeof(av)}`)
-    av=av or""
+assert(av==nil or type(av)=="string",`"Tab.AddSection[param 1]". 'string', or 'nil' expected, got {typeof(av)}`)
+av=av or""
 
-    local aw=V[self]
+local aw=V[self]
 
-    local ax=E("Frame","Option",T[self].Container,{
-        Size=UDim2.new(1,0,0,20),
-        BackgroundTransparency=1
-    })
+local ax=E("Frame","Option",T[self].Container,{
+Size=UDim2.new(1,0,0,20),
+BackgroundTransparency=1
+})
 
-    local ay=E("TextLabel",ax,{
-        TextXAlignment=Enum.TextXAlignment.Left,
-        TextTruncate=Enum.TextTruncate.AtEnd,
-        Size=UDim2.new(1,-25,1,0),
-        Position=UDim2.new(0,5),
-        BackgroundTransparency=1,
-        TextSize=17,
-        Text=av,
-        ThemeTag={
-            OBJECTS=aw,
-            TextColor3="Colors.Text.Default",
-            Font="Font.Bold"
-        }
-    })
+local ay=E("TextLabel",ax,{
+TextXAlignment=Enum.TextXAlignment.Left,
+TextTruncate=Enum.TextTruncate.AtEnd,
+Size=UDim2.new(1,-25,1,0),
+Position=UDim2.new(0,5),
+BackgroundTransparency=1,
+TextSize=17,
+Text=av,
+ThemeTag={
+OBJECTS=aw,
+TextColor3="Colors.Text.Default",
+Font="Font.Bold"
+}
+})
 
-    local obj = setmetatable({
-        Title=av,
-        DESTROY_ELEMENT=ax,
-        VISIBLE_ELEMENT=ax,
-        TITLE_LABEL=ay,
-        Kind="Section",
-        Parent=self
-    },ai)
+return setmetatable({
+Title=av,
 
-    table.insert(SearchIndex, {
-        Title = av:lower():gsub("[%s%p%c]",""), 
-        Kind = "section", 
-        Tab = self, 
-        Frame = ax, 
-        IsSection = true
-    }) 
+DESTROY_ELEMENT=ax,
+VISIBLE_ELEMENT=ax,
+TITLE_LABEL=ay,
 
-    return obj
+Kind="Section",
+Parent=self
+},ai)
 end
 
 function ah:AddToggle(av)
@@ -3527,100 +3519,57 @@ ag.Notificafion=ag.Notify
 function ag:PerformSearch(query)
     local q = query:lower():gsub("[%s%p%c]","")
 
-    if q == "" then
-        for _,item in SearchIndex do
-            if item.searchHidden then
-                item.Frame.Visible = true
-                item.searchHidden = false
-            end
+if q == "" then
+    for _,item in SearchIndex do
+        if item.searchHidden then
+            item.Frame.Visible = true
+            item.searchHidden = false
         end
-        for _,tab in S do
-            if tabHiddenState[tab] then
-                T[tab].SelectTabButton.Visible = true
-               tabHiddenState[tab] = nil
-            end
-        end
-        return
     end
+    for _,tab in S do
+        if tabHiddenState[tab] then
+            T[tab].SelectTabButton.Visible = true
+           tabHiddenState[tab] = nil
+        end
+    end
+    return
+end
 
     local tabHasMatch = {}
-    local sectionHasMatch = {} 
-    local elementMatches = {}
-    local currentSectionPerTab = {}
 
-    -- BƯỚC 1: Quét toàn bộ để tìm các phần tử khớp và đánh dấu Section của chúng
-    for _,item in SearchIndex do
-        if item.IsSection then
-            -- Lưu lại Section gần nhất của Tab này để gán cho các item bên dưới
-            currentSectionPerTab[item.Tab] = item
-            
-            -- Nếu bản thân tên Section khớp với từ khóa tìm kiếm
-            local matched = item.Title:find(q,1,true) ~= nil
-            if matched then
-                elementMatches[item] = true
-                tabHasMatch[item.Tab] = true
-                sectionHasMatch[item] = true
-            end
-        else
-            -- Logic tìm kiếm bình thường cho Toggle, Button, Slider...
-            local matched = item.Title:find(q,1,true) ~= nil
-                         or item.Kind:find(q,1,true) ~= nil
-            
-            if matched then
-                elementMatches[item] = true
-                tabHasMatch[item.Tab] = true
-                
-                -- Đánh dấu Section chứa item này là có kết quả, cần được hiển thị
-                local parentSection = currentSectionPerTab[item.Tab]
-                if parentSection then
-                    sectionHasMatch[parentSection] = true
-                end
-            end
-        end
+for _,item in SearchIndex do
+    local matched = item.Title:find(q,1,true) ~= nil
+                 or item.Kind:find(q,1,true) ~= nil
+    if not matched and item.Frame.Visible then
+        item.Frame.Visible = false
+        item.searchHidden = true
+    elseif matched and item.searchHidden then
+        item.Frame.Visible = true
+        item.searchHidden = false
     end
-
-    -- BƯỚC 2: Cập nhật trạng thái Ẩn/Hiện dựa vào kết quả quét ở Bước 1
-    for _,item in SearchIndex do
-        local shouldBeVisible = false
-        
-        if item.IsSection then
-            -- Section chỉ hiện nếu bản thân nó khớp từ khóa HOẶC có con khớp từ khóa
-            shouldBeVisible = sectionHasMatch[item] == true
-        else
-            -- Phần tử bình thường hiện nếu bản thân nó khớp
-            shouldBeVisible = elementMatches[item] == true
-        end
-
-        if shouldBeVisible then
-            if item.searchHidden or not item.Frame.Visible then
-                item.Frame.Visible = true
-                item.searchHidden = false
-            end
-        else
-            if not item.searchHidden or item.Frame.Visible then
-                item.Frame.Visible = false
-                item.searchHidden = true
-            end
-        end
+    if matched then
+        tabHasMatch[item.Tab] = true
     end
+end
 
     -- Ẩn/hiện nút tab bên trái
     local firstVisible = nil
-    for _,tab in S do
-        local visible = tabHasMatch[tab] == true
-        local btn = T[tab].SelectTabButton
-        if not visible and btn.Visible then
-            btn.Visible = false
-            tabHiddenState[tab] = true
+for _,tab in S do
+    local visible = tabHasMatch[tab] == true
+    local btn = T[tab].SelectTabButton
+    if not visible and btn.Visible then
+        btn.Visible = false
+        tabHiddenState[tab] = true
         elseif visible and tabHiddenState[tab] then
-            btn.Visible = true
-            tabHiddenState[tab] = nil
-        end
-        if visible and not firstVisible then
-            firstVisible = tab
-        end
+    btn.Visible = true
+    tabHiddenState[tab] = nil
     end
+    if visible and not firstVisible then
+        firstVisible = tab
+    end
+end
 
+    -- Nếu tab hiện tại bị ẩn → tự động chuyển sang tab có kết quả
     if ac and not tabHasMatch[ac] and firstVisible then
         firstVisible:Select()
     end
@@ -3948,13 +3897,6 @@ Rotation=45,
 ThemeTag={
 Color="Colors.Background"
 }
-},
-Stroke={
-Thickness=1,
-Transparency=0.25,
-ThemeTag={
-Color="Colors.Stroke"
-}
 }
 }
 })
@@ -3970,21 +3912,30 @@ end)
 
 D.Draggable(ak,ad,0.5)
 
-local glowFrame=E("Frame","GlowBorder",I,{
-Position=UDim2.new(ak.Position.X.Scale,ak.Position.X.Offset-7,ak.Position.Y.Scale,ak.Position.Y.Offset-7),
-Size=UDim2.fromOffset(ak.Size.X.Offset+14,ak.Size.Y.Offset+14),
-BackgroundTransparency=0.93,
-ZIndex=0,
-Elements={Corner=UDim.new(0,12)},
-ThemeTag={BackgroundColor3="Colors.Primary"}
+-- ╔══════════════════════════════════════╗
+-- ║       DIO NEON BORDER SYSTEM        ║
+-- ╚══════════════════════════════════════╝
+
+-- Outer neon glow border (white glow effect)
+E("UIStroke","OuterNeonBorder",ak,{
+Color=Color3.fromRGB(255,255,255),
+Thickness=2.5,
+Transparency=0.0
 })
-u(n,function()
-if not ak.Parent then glowFrame.Parent=nil return end
-local gp=ak.Position
-local gz=ak.Size
-glowFrame.Position=UDim2.new(gp.X.Scale,gp.X.Offset-7,gp.Y.Scale,gp.Y.Offset-7)
-glowFrame.Size=UDim2.fromOffset(gz.X.Offset+14,gz.Y.Offset+14)
-end)
+
+-- Inner thin decorative border (slightly inset)
+local dioInnerBorder=E("Frame","InnerBorderFrame",ak,{
+Size=UDim2.new(1,-14,1,-14),
+Position=UDim2.new(0,7,0,7),
+BackgroundTransparency=1,
+ZIndex=10
+})
+E("UICorner","",dioInnerBorder,{CornerRadius=UDim.new(0,5)})
+E("UIStroke","",dioInnerBorder,{
+Color=Color3.fromRGB(255,255,255),
+Thickness=0.75,
+Transparency=0.55
+})
 
 local al=E("Folder","Components",ak)
 local am=E("Folder","Dropdowns",I)
@@ -3997,26 +3948,29 @@ BackgroundTransparency=1
 local ao=E("TextLabel","Title",an,{
 TextXAlignment=Enum.TextXAlignment.Left,
 AutomaticSize=Enum.AutomaticSize.XY,
-Position=UDim2.new(0,15,0.5,0),
-AnchorPoint=Vector2.new(0,0.5),
+-- Căn giữa topbar giống Banana Cat Hub style
+Position=UDim2.new(0.5,0,0.5,0),
+AnchorPoint=Vector2.new(0.5,0.5),
 Text=ae.Title,
-TextSize=12,
+TextSize=13,
 BackgroundTransparency=1,
+-- Màu vàng gold giống "Banana Cat Hub" title
+TextColor3=Color3.fromRGB(255,195,50),
 ThemeTag={
-TextColor3="Colors.Text.Default",
 Font="Font.Bold"
 },
 Childs={
 E("TextLabel","SubTitle",{
 Size=UDim2.fromScale(0,1),
 AutomaticSize="X",
-AnchorPoint=Vector2.new(0,1),
-Position=UDim2.new(1,5,0.9),
-Text=ae.SubTitle,
+-- Căn giữa dọc, sát bên phải title
+AnchorPoint=Vector2.new(0,0.5),
+Position=UDim2.new(1,6,0.5),
+Text="- "..ae.SubTitle,
 BackgroundTransparency=1,
 TextXAlignment="Left",
-TextYAlignment="Bottom",
-TextSize=8,
+TextYAlignment="Center",
+TextSize=9,
 ThemeTag={
 TextColor3="Colors.Text.Dark",
 Font="Font.Normal"
@@ -4148,11 +4102,11 @@ Title="Close Window?",
 Content="You Want Close UI?",
 Options={
 {
-Title="YES",
+Title="Yes",
 Callback=function()self:Destroy()end
 },
 {
-Title="NO"
+Title="No"
 }
 }
 }
@@ -4189,71 +4143,34 @@ u(ar.Activated,function()
     as:Dialog(aA)
 end)
 
-local searchContainerHeight = 35
-
-local searchContainer = E("Frame", "SearchContainer", al, {
-    Size = UDim2.new(0, at.Size.X.Offset, 0, searchContainerHeight),
-    Position = UDim2.new(0, 0, 0, an.Size.Y.Offset), -- Bắt đầu từ mép dưới của TopBar
-    BackgroundTransparency = 1,
-    Elements = {
-        Padding = {
-            PaddingLeft = UDim.new(0, 10),
-            PaddingRight = UDim.new(0, 10),
-            PaddingTop = UDim.new(0, 5),
-            PaddingBottom = UDim.new(0, 5)
-        }
-    }
-})
-
--- Background của Search Box (màu nền bo góc)
-local searchInputBg = E("Frame", "SearchBg", searchContainer, {
-    Size = UDim2.fromScale(1, 1),
-    ThemeTag = {
-        BackgroundColor3 = "Colors.Stroke"
-    },
-    Elements = {
-        Corner = UDim.new(0, 6)
-    }
-})
-
--- Ô nhập Text tìm kiếm
-local searchInput = E("TextBox", "SearchBar", searchInputBg, {
-    Size = UDim2.new(1, -25, 1, 0), -- Chiều rộng trừ đi khoảng trống cho Icon
-    Position = UDim2.new(0, 8, 0, 0), -- Cách lề trái 8px
-    BackgroundTransparency = 1,
-    PlaceholderText = "Search Section and Function",
+-- THÊM VÀO ĐÂY
+local searchInput = E("TextBox","SearchBar",an,{
+    Size = UDim2.new(0,130,0,16),
+    Position = UDim2.new(0.5,0,0.5,0),
+    AnchorPoint = Vector2.new(0.5,0.5),
+    BorderSizePixel = 0,
+    PlaceholderText = "Search Section",
     Text = "",
-    TextSize = 12,
-    TextXAlignment = Enum.TextXAlignment.Left,
-    ClearTextOnFocus = true, 
+    TextSize = 9,
+    ClearTextOnFocus = false,
     ThemeTag = {
+        BackgroundColor3 = "Colors.Stroke",
         TextColor3 = "Colors.Text.Default",
         PlaceholderColor3 = "Colors.Text.Darker",
         Font = "Font.Normal"
+    },
+    Elements = {
+        Corner = UDim.new(0,4),
+        Padding = {
+          PaddingLeft = UDim.new(0,7),
+          PaddingRight = UDim.new(0,7),
+          PaddingTop = UDim.new(0,0),
+          PaddingBottom = UDim.new(0,0)
+       }
     }
 })
 
-local searchIcon = E("ImageLabel", "SearchIcon", searchInputBg, {
-    Size = UDim2.new(0, 14, 0, 14),
-    Position = UDim2.new(1, -8, 0.5, 0), -- Nằm sát lề phải
-    AnchorPoint = Vector2.new(1, 0.5),
-    BackgroundTransparency = 1,
-    ThemeTag = {
-        Image = "Icons.Search",
-        ImageColor3 = "Colors.Icons"
-    }
-})
-
--- Điều chỉnh lại kích thước của danh sách Tab (TabsScroll) để nhường chỗ cho Search Box
-at.Size = UDim2.new(0, at.Size.X.Offset, 1, -(an.Size.Y.Offset + searchContainerHeight))
-
-u(ax:GetPropertyChangedSignal("Position"), function()
-    searchContainer.Size = UDim2.new(0, ax.Position.X.Offset, 0, searchContainerHeight)
-    -- Giữ nguyên logic trừ đi chiều cao của TopBar + SearchBox cho TabsScroll
-    at.Size = UDim2.new(0, ax.Position.X.Offset, 1, -(an.Size.Y.Offset + searchContainerHeight))
-end)
-
-u(searchInput:GetPropertyChangedSignal("Text"), function()
+u(searchInput:GetPropertyChangedSignal"Text",function()
     as:PerformSearch(searchInput.Text)
 end)
 
