@@ -3941,60 +3941,62 @@ local al=E("Folder","Components",ak)
 local am=E("Folder","Dropdowns",I)
 
 local an=E("Frame","TopBar",al,{
-Size=UDim2.new(1,0,0,40),
+Size=UDim2.new(1,0,0,28),
 BackgroundTransparency=1
 })
 
--- Container giữa TopBar chứa Title + SubTitle xếp dọc
-local aoCenter=E("Frame","TitleGroup",an,{
-Size=UDim2.new(0,200,1,0),
+local ao=E("TextLabel","Title",an,{
+TextXAlignment=Enum.TextXAlignment.Left,
+AutomaticSize=Enum.AutomaticSize.XY,
 Position=UDim2.new(0.5,0,0.5,0),
 AnchorPoint=Vector2.new(0.5,0.5),
-BackgroundTransparency=1,
-})
-E("UIListLayout","",aoCenter,{
-FillDirection=Enum.FillDirection.Vertical,
-HorizontalAlignment=Enum.HorizontalAlignment.Center,
-VerticalAlignment=Enum.VerticalAlignment.Center,
-Padding=UDim.new(0,1),
-})
-
--- Title "DIO Hub" - trắng, typewriter
-local ao=E("TextLabel","Title",aoCenter,{
-TextXAlignment=Enum.TextXAlignment.Center,
-Size=UDim2.new(1,0,0,18),
-Text="",
+Text=ae.Title,
 TextSize=13,
 BackgroundTransparency=1,
+-- Trắng để UIGradient shimmer toàn quyền kiểm soát màu
 TextColor3=Color3.fromRGB(255,255,255),
 ThemeTag={
-Font="Font.Bold"
-}
-})
-
--- SubTitle - nhỏ hơn, ngay dưới Title
-local aoSub=E("TextLabel","SubTitle",aoCenter,{
-Size=UDim2.new(1,0,0,12),
-Text=ae.SubTitle,
+Font="Font.ExtraBold"
+},
+Childs={
+E("TextLabel","SubTitle",{
+Size=UDim2.fromScale(0,1),
+AutomaticSize="X",
+AnchorPoint=Vector2.new(0,0.5),
+Position=UDim2.new(1,6,0.5),
+Text="- "..ae.SubTitle,
 BackgroundTransparency=1,
-TextXAlignment=Enum.TextXAlignment.Center,
-TextSize=8,
+TextXAlignment="Left",
+TextYAlignment="Center",
+TextSize=9,
 ThemeTag={
-TextColor3="Colors.Text.Darker",
+TextColor3="Colors.Text.Dark",
 Font="Font.Normal"
 }
 })
-
--- Nút search icon bên phải TopBar (trước nút Minimize)
-local aoSearchBtn=E("ImageButton","SearchToggle",an,{
-Size=UDim2.new(0,16,0,16),
-Position=UDim2.new(1,-58,0.5,0),
-AnchorPoint=Vector2.new(1,0.5),
-BackgroundTransparency=1,
-Image="rbxassetid://10734943674",
-ImageColor3=Color3.fromRGB(210,210,210),
-AutoButtonColor=false,
+}
 })
+
+-- ╔══════════════════════════════════════════╗
+-- ║    DIO TITLE SHIMMER ANIMATION          ║
+-- ║  Gradient vàng-trắng quét liên tục     ║
+-- ╚══════════════════════════════════════════╝
+local dioShimmerGrad=E("UIGradient","DIOShimmer",ao,{
+Offset=Vector2.new(-1,0),
+Color=ColorSequence.new{
+ColorSequenceKeypoint.new(0.00,Color3.fromRGB(220,90,20)),
+ColorSequenceKeypoint.new(0.20,Color3.fromRGB(255,165,30)),
+ColorSequenceKeypoint.new(0.40,Color3.fromRGB(255,230,120)),
+ColorSequenceKeypoint.new(0.50,Color3.fromRGB(255,255,220)),
+ColorSequenceKeypoint.new(0.60,Color3.fromRGB(255,230,120)),
+ColorSequenceKeypoint.new(0.80,Color3.fromRGB(255,165,30)),
+ColorSequenceKeypoint.new(1.00,Color3.fromRGB(220,90,20)),
+}
+})
+-- Tween shimmer vô hạn: quét từ -1 → 1 rồi đảo ngược
+j:Create(dioShimmerGrad,TweenInfo.new(2.2,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut,-1,true),{
+Offset=Vector2.new(1,0)
+}):Play()
 
 local ap=E("Folder","Buttons",an,{
 Childs={
@@ -4135,7 +4137,7 @@ u(ar.MouseEnter,function()ar.BackgroundTransparency=0.65 end)
 u(ar.MouseLeave,function()ar.BackgroundTransparency=1.00 end)
 
 as.SetUIScale=self.SetUIScale
-as.SUBTITLE_LABEL=aoSub
+as.SUBTITLE_LABEL=ao.SubTitle
 as.TITLE_LABEL=ao
 
 local aB=as:StartWindow{
@@ -4145,7 +4147,7 @@ Dropdowns=am,
 MainFrame=ak,
 TopBar=an,
 
-SubTitle=aoSub,
+SubTitle=ao.SubTitle,
 Title=ao,
 
 UIScale=ad,
@@ -4160,116 +4162,39 @@ u(ar.Activated,function()
     as:Dialog(aA)
 end)
 
--- SearchBar: thay thế Title+SubTitle khi search đang mở
-local searchInput=E("TextBox","SearchBar",an,{
-Size=UDim2.new(0,180,0,22),
-Position=UDim2.new(0.5,0,0.5,0),
-AnchorPoint=Vector2.new(0.5,0.5),
-BorderSizePixel=0,
-PlaceholderText="Search...",
-Text="",
-TextSize=11,
-ClearTextOnFocus=false,
-Visible=false,
-ThemeTag={
-BackgroundColor3="Colors.Stroke",
-TextColor3="Colors.Text.Default",
-PlaceholderColor3="Colors.Text.Darker",
-Font="Font.Normal"
-},
-Elements={
-Corner=UDim.new(0,5),
-Padding={
-PaddingLeft=UDim.new(0,10),
-PaddingRight=UDim.new(0,10),
-PaddingTop=UDim.new(0,2),
-PaddingBottom=UDim.new(0,2)
-}
-}
+-- Search bar dời sang TRÁI (chỗ title cũ)
+local searchInput = E("TextBox","SearchBar",an,{
+    Size = UDim2.new(0,118,0,16),
+    -- Đặt ở trái topbar, chỗ title cũ từng là
+    Position = UDim2.new(0,12,0.5,0),
+    AnchorPoint = Vector2.new(0,0.5),
+    BorderSizePixel = 0,
+    PlaceholderText = "🔍 Search...",
+    Text = "",
+    TextSize = 9,
+    ClearTextOnFocus = false,
+    ThemeTag = {
+        BackgroundColor3 = "Colors.Stroke",
+        TextColor3 = "Colors.Text.Default",
+        PlaceholderColor3 = "Colors.Text.Darker",
+        Font = "Font.Normal"
+    },
+    Elements = {
+        Corner = UDim.new(0,4),
+        Padding = {
+          PaddingLeft = UDim.new(0,7),
+          PaddingRight = UDim.new(0,7),
+          PaddingTop = UDim.new(0,0),
+          PaddingBottom = UDim.new(0,0)
+       }
+    }
 })
-
--- Hoạt ảnh typewriter: gõ từng ký tự vào title
-local function typewriterPlay(label,text,speed)
-speed=speed or 0.065
-label.Text=""
-for idx=1,#text do
-label.Text=text:sub(1,idx)
-task.wait(speed)
-end
-end
-
--- Toggle search mode
-local searchActive=false
-
-local function enterSearch()
-if searchActive then return end
-searchActive=true
--- Ẩn group title+subtitle, hiện search input
-aoCenter.Visible=false
-searchInput.Visible=true
-searchInput:CaptureFocus()
--- Đổi icon thành X khi đang search
-aoSearchBtn.ImageColor3=Color3.fromRGB(255,100,100)
-end
-
-local function exitSearch()
-if not searchActive then return end
-searchActive=false
-searchInput.Text=""
-as:PerformSearch("")
-searchInput.Visible=false
--- Hiện lại group title+subtitle
-aoCenter.Visible=true
-task.spawn(typewriterPlay,ao,ae.Title)
--- Khôi phục màu icon
-aoSearchBtn.ImageColor3=Color3.fromRGB(210,210,210)
-end
-
--- Click icon kính lúp → toggle search
-u(aoSearchBtn.Activated,function()
-if searchActive then
-exitSearch()
-else
-enterSearch()
-end
-end)
-
--- Hover effect icon kính lúp
-u(aoSearchBtn.MouseEnter,function()
-J(aoSearchBtn,"ImageTransparency",0.3,0.1):Play()
-end)
-u(aoSearchBtn.MouseLeave,function()
-J(aoSearchBtn,"ImageTransparency",0,0.1):Play()
-end)
-
--- Mất focus + text rỗng → đóng search, quay lại title
-u(searchInput.FocusLost,function()
-if searchInput.Text=="" then
-exitSearch()
-end
-end)
-
--- ESC → thoát search
-u(i.InputBegan,function(inp,processed)
-if not processed
-and inp.KeyCode==Enum.KeyCode.Escape
-and searchActive then
-exitSearch()
-end
-end)
-
--- Text thay đổi → lọc tab
+ 
 u(searchInput:GetPropertyChangedSignal"Text",function()
-as:PerformSearch(searchInput.Text)
+    as:PerformSearch(searchInput.Text)
 end)
 
--- Chạy hoạt ảnh typewriter lần đầu sau khi window load xong
-task.spawn(function()
-task.wait(0.35)
-typewriterPlay(ao,ae.Title)
-end)
-
-return as
+return as  
 end
 
 return s
