@@ -83,10 +83,10 @@ local placeId = game.PlaceId
 
 local World1 =
     placeId == 2753915549
-    or place == 
+    or placeId == 85211729168715
 local World2 =
     placeId == 4442272183
-   or placeId ==
+   or placeId == 79091703265657
 local World3 =
     placeId == 7449423635
     or placeId == 100117331123089
