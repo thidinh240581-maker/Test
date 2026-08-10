@@ -4,9 +4,9 @@
 -- ════════════════════════════════════════════════════════════════════════════
 
 -- ─── KEY SYSTEM ─────────────────────────────────────────────────────────────
--- Usage in your executor:
+--  Usage in your executor:
 --   Key          = "your_key"   -- leave "" during testing
---   AutoSetting  = true         -- true = load last settings on start
+--   AutoSetting  = true         -- true =  load last settings on start
 --   loadstring(game:HttpGet("URL_TO_THIS_FILE"))()
 -- ─────────────────────────────────────────────────────────────────────────────
 local _KEY_OK       = false
@@ -229,7 +229,6 @@ end
 
 -- [BananaHub-Fix] Original: one-liner repeat-local-start with bare wait() — rewritten
 repeat
-    task.wait(0.5)
 until game:IsLoaded() and pcall(function()
     return plr.PlayerGui:WaitForChild("Main", 1):WaitForChild("Loading", 1)
 end)
