@@ -8363,7 +8363,7 @@ Tabs.Settings:AddSlider({
     Callback = function(Value)
         _G.HopDelay = Value
         _G.SaveData["HopDelay"] = Value
-        SaveSettings() * 60
+        SaveSettings()
     end
 })
 Tabs.Settings:AddToggle({
