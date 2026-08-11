@@ -17557,3 +17557,137 @@ getgenv().UseConfiguredSkills = function(targetPosition)
 		end
 	end)
 end
+
+-- =====================================================================
+-- BANANA UI LAYOUT ORDER ONLY
+-- IMPORTANT: This block changes visual LayoutOrder only.
+-- Existing DIO functions, callbacks, logic and control implementations
+-- are intentionally left untouched.
+-- =====================================================================
+task.defer(function()
+    task.wait(0.15)
+
+    local BananaTabOrder = {
+        ["Shop"] = {"Misc Shop", "Fighting Shop", "Ability Shop"},
+        ["Status And Server"] = {"Discord", "Status", "Server"},
+        ["LocalPlayer"] = {"Local Player"},
+        ["Setting Farm"] = {"Setting Farm"},
+        ["Hold and Select Skill"] = {"Select Skills", "Hold Skills"},
+        ["Farming"] = {"Setting Farm", "Mastery Farm", "Farming Meterial"},
+        ["Stack Farming"] = {"Auto World", "Devil Fruit", "Event Game", "Boss Rip Indra", "Boss Soul Reaper", "Boss Dough King", "Boss Darkbeard"},
+        ["Farming Other"] = {"Fishing", "Quest Dragon", "Attack All Mobs", "Berry", "Farm Chest", "Raid Law", "Farm Observation", "Auto Boss"},
+        ["Fruit and Raid, Dungeon"] = {"Devil Fruit", "Raids", "Dungeon"},
+        ["Sea Event"] = {"Setting", "Kitsune Event", "Leviathan Event"},
+        ["Upgrade Race"] = {"Race Draco", "Race Normal", "Race V4"},
+        ["Get and Upgrade Items"] = {"Get Items", "Mastery Weapon"},
+        ["Volcano Event"] = {"Farming Volcano", "Fully Volcano"},
+        ["tab webhook"] = {"ESP"},
+        ["PVP"] = {"PVP", "MISC PVP"},
+    }
+
+    local BananaAlias = {
+        ["Auto World"] = 1, ["Devil Fruit"] = 2, ["Event Game"] = 3,
+        ["Boss Rip Indra"] = 4, ["Boss Soul Reaper"] = 5, ["Boss Dough King"] = 6,
+        ["Boss Darkbeard"] = 7, ["Fishing"] = 1, ["Quest Dragon"] = 2,
+        ["Attack All Mobs"] = 3, ["Berry"] = 4, ["Farm Chest"] = 5,
+        ["Raid Law"] = 6, ["Farm Observation"] = 7, ["Auto Boss"] = 8,
+    }
+
+    local function norm(s)
+        return tostring(s or ""):lower():gsub("[%[%]%(%)%{%}%p%s_%-]+", "")
+    end
+
+    local function textScore(a, b)
+        a, b = norm(a), norm(b)
+        if a == "" or b == "" then return 0 end
+        if a == b then return 1 end
+        if string.find(a, b, 1, true) or string.find(b, a, 1, true) then
+            return 0.82
+        end
+        local hits, total = 0, 0
+        for w in string.gmatch(a, "%w+") do
+            total += 1
+            if string.find(b, w, 1, true) then hits += 1 end
+        end
+        return total > 0 and hits / total or 0
+    end
+
+    local function getSectionTitle(section)
+        local t = section:FindFirstChild("Topsec")
+        local l = t and t:FindFirstChild("Sectiontitle")
+        return l and l.Text or section.Name:gsub("_Dot$", "")
+    end
+
+    local function getControlText(control)
+        local best = ""
+        for _, d in ipairs(control:GetDescendants()) do
+            if d:IsA("TextLabel") or d:IsA("TextButton") or d:IsA("TextBox") then
+                local tx = tostring(d.Text or "")
+                if #tx > #best and tx ~= "" then best = tx end
+            end
+        end
+        return best
+    end
+
+    local function sectionRank(tabName, sectionTitle, used)
+        local order = BananaTabOrder[tabName]
+        if not order then return 9000 end
+
+        -- Strong direct name match first.
+        for i, name in ipairs(order) do
+            if norm(name) == norm(sectionTitle) then
+                used[name] = (used[name] or 0) + 1
+                return i * 1000 + used[name]
+            end
+        end
+
+        -- Known semantic aliases.
+        local alias = BananaAlias[sectionTitle]
+        if alias then
+            return alias * 1000 + 500
+        end
+
+        -- Conservative semantic fallback.
+        local best, bestScore = 9000, 0
+        for i, name in ipairs(order) do
+            local s = textScore(sectionTitle, name)
+            if s > bestScore then
+                bestScore = s
+                best = i * 1000 + 600
+            end
+        end
+        return best
+    end
+
+    local mainGui = Library_Function and Library_Function.Gui
+    if not mainGui then return end
+
+    local pageLists = {}
+    for _, obj in ipairs(mainGui:GetDescendants()) do
+        if obj:IsA("ScrollingFrame") and obj.Name == "PageList" then
+            table.insert(pageLists, obj)
+        end
+    end
+
+    for _, pageList in ipairs(pageLists) do
+        local page = pageList.Parent
+        local titleLabel = page and page:FindFirstChild("GUITextColor")
+        local tabName = titleLabel and titleLabel.Text or ""
+
+        if BananaTabOrder[tabName] then
+            local sections = {}
+            for _, child in ipairs(pageList:GetChildren()) do
+                if child:IsA("Frame") and child:FindFirstChild("Sectiontitle") then
+                    table.insert(sections, child)
+                end
+            end
+
+            local used = {}
+            for index, section in ipairs(sections) do
+                local title = getSectionTitle(section)
+                local rank = sectionRank(tabName, title, used)
+                section.LayoutOrder = rank + index * 0.001
+            end
+        end
+    end
+end)
