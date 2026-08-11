@@ -907,7 +907,7 @@ spawn(function()
 					local Y = Instance.new("Highlight");
 					Y.Name = "highlight";
 					Y.Enabled = true;
-					Y.FillColor = Color3.fromRGB(120, 50, 200);
+					Y.FillColor = Color3.fromRGB(0, 255, 100);
 					Y.OutlineColor = Color3.fromRGB(255, 255, 255);
 					Y.FillTransparency = .5;
 					Y.OutlineTransparency = .2;
@@ -1705,43 +1705,45 @@ end;
 local dz = {};
 dz.listfunction = {};
 dz.listtab = {};
+dz.listpage = {};
+dz.listsection = {};
 local Rz = game.Players.LocalPlayer.PlayerGui:FindFirstChild("TouchGui");
 local Qz;
 local rz;
 local az;
 local wz = {};
 local Fz = {
-		["Border Color"] = Color3.fromRGB(120, 50, 200),
+		["Border Color"] = Color3.fromRGB(0, 255, 100),
 		["Click Effect Color"] = Color3.fromRGB(230, 230, 230),
 		["Setting Icon Color"] = Color3.fromRGB(230, 230, 230),
-		["Logo Image"] = "rbxassetid://122444592900332",
+		["Logo Image"] = "rbxassetid://105848560127717",
 		["Search Icon Color"] = Color3.fromRGB(255, 255, 255),
-		["Search Icon Highlight Color"] = Color3.fromRGB(120, 50, 200),
+		["Search Icon Highlight Color"] = Color3.fromRGB(0, 255, 100),
 		["GUI Text Color"] = Color3.fromRGB(230, 230, 230),
 		["Text Color"] = Color3.fromRGB(230, 230, 230),
 		["Placeholder Text Color"] = Color3.fromRGB(178, 178, 178),
-		["Title Text Color"] = Color3.fromRGB(120, 50, 200),
+		["Title Text Color"] = Color3.fromRGB(0, 255, 100),
 		["Background Main Color"] = Color3.fromRGB(15, 15, 15),
 		["Background 1 Color"] = Color3.fromRGB(28, 28, 34),
 		["Background 1 Transparency"] = .25,
 		["Background 2 Color"] = Color3.fromRGB(90, 90, 90),
 		["Background 3 Color"] = Color3.fromRGB(20, 20, 20),
 		["Background Image"] = "",
-		["Page Selected Color"] = Color3.fromRGB(120, 50, 200),
-		["Section Text Color"] = Color3.fromRGB(120, 50, 200),
-		["Section Underline Color"] = Color3.fromRGB(120, 50, 200),
-		["Toggle Border Color"] = Color3.fromRGB(120, 50, 200),
+		["Page Selected Color"] = Color3.fromRGB(0, 255, 100),
+		["Section Text Color"] = Color3.fromRGB(0, 255, 100),
+		["Section Underline Color"] = Color3.fromRGB(0, 255, 100),
+		["Toggle Border Color"] = Color3.fromRGB(0, 255, 100),
 		["Toggle Checked Color"] = Color3.fromRGB(230, 230, 230),
 		["Toggle Desc Color"] = Color3.fromRGB(185, 185, 185),
 		["Button Color"] = Color3.fromRGB(35, 35, 35),
 		["Label Color"] = Color3.fromRGB(35, 35, 35),
 		["Dropdown Icon Color"] = Color3.fromRGB(230, 230, 230),
-		["Dropdown Selected Color"] = Color3.fromRGB(120, 50, 200),
-		["Dropdown Selected Check Color"] = Color3.fromRGB(120, 50, 200),
-		["Textbox Highlight Color"] = Color3.fromRGB(120, 50, 200),
-		["Box Highlight Color"] = Color3.fromRGB(120, 50, 200),
+		["Dropdown Selected Color"] = Color3.fromRGB(0, 255, 100),
+		["Dropdown Selected Check Color"] = Color3.fromRGB(0, 255, 100),
+		["Textbox Highlight Color"] = Color3.fromRGB(0, 255, 100),
+		["Box Highlight Color"] = Color3.fromRGB(0, 255, 100),
 		["Slider Line Color"] = Color3.fromRGB(45, 22, 67),
-		["Slider Highlight Color"] = Color3.fromRGB(120, 50, 200),
+		["Slider Highlight Color"] = Color3.fromRGB(0, 255, 100),
 		["Tween Animation 1 Speed"] = Rz and 0 or .25,
 		["Tween Animation 2 Speed"] = Rz and 0 or .5,
 		["Tween Animation 3 Speed"] = Rz and 0 or .1,
@@ -1828,7 +1830,7 @@ local gz = Instance.new("ImageButton", nz.HideGui);
 gz.BorderSizePixel = 0;
 gz.BackgroundColor3 = Color3.fromRGB(255, 255, 255);
 gz.AnchorPoint = Vector2.new(0, 1);
-gz.Image = "rbxassetid://122444592900332";
+gz.Image = "rbxassetid://105848560127717";
 gz.Size = UDim2.new(0, 50, 0, 50);
 gz.BorderColor3 = Color3.fromRGB(0, 0, 0);
 gz.Position = UDim2.new(.01, 0, .99, 0);
@@ -1840,7 +1842,7 @@ local zz = Instance.new("UICorner", gz);
 zz.CornerRadius = UDim.new(1, 8);
 local iz = Instance.new("UIStroke", gz);
 iz.Thickness = .6;
-iz.Color = Color3.fromRGB(120, 50, 200);
+iz.Color = Color3.fromRGB(0, 255, 100);
 function nz.Getcolor(Y)
 	return { math.floor(Y.r * 255), math.floor(Y.g * 255), math.floor(Y.b * 255) };
 end;
@@ -2029,7 +2031,7 @@ function Kz.CreateMain(Y)
 	local U = tostring((nz.Getcolor(dz.UIColor["Title Text Color"]))[2]);
 	local C = tostring((nz.Getcolor(dz.UIColor["Title Text Color"]))[3]);
 	local v = i .. ("," .. (U .. ("," .. C)));
-	M.Text = "<font color=\"rgb(" .. (v .. ")\">the_real_Panda Hub </font> : Blox Fruits");
+	M.Text = "<font color=\"rgb(" .. (v .. ")\">DIO Hub </font> : Blox Fruits");
 	z = Instance.new("ImageLabel");
 	z.Name = "MainContainer";
 	z.Parent = Q;
@@ -2075,7 +2077,7 @@ function Kz.CreateMain(Y)
 	F.BackgroundTransparency = 1.0;
 	F.Position = UDim2.new(0, 5, 0, dz.T1 and 5 or 0);
 	F.Size = UDim2.new(0, dz.T1 and 30 or 25, 0, dz.T1 and 15 or 25);
-	F.Image = "rbxassetid://122444592900332";
+	F.Image = "rbxassetid://105848560127717";
 	M.Name = "TextLabelMain";
 	M.Parent = w;
 	M.BackgroundColor3 = Color3.fromRGB(230, 230, 230);
@@ -2092,7 +2094,7 @@ function Kz.CreateMain(Y)
 	local c = tostring((nz.Getcolor(dz.UIColor["Title Text Color"]))[2]);
 	local H = tostring((nz.Getcolor(dz.UIColor["Title Text Color"]))[3]);
 	local S = b .. ("," .. (c .. ("," .. H)));
-	M.Text = "<font color=\"rgb(" .. (S .. ")\">the_real_Panda Hub </font> : Blox Fruits");
+	M.Text = "<font color=\"rgb(" .. (S .. ")\">DIO Hub </font> : Blox Fruits");
 	K.Name = "Background1";
 	K.Parent = g;
 	K.Position = UDim2.new(0, 5, 0, 0);
@@ -2300,6 +2302,7 @@ function Kz.CreateMain(Y)
 		h = h + 1;
 		N.Name = "Page" .. U;
 		N.Parent = D;
+		dz.listpage[d] = { [1] = Q, [2] = N, [3] = d, [4] = R };
 		N.BackgroundColor3 = dz.UIColor["Background 1 Color"];
 		N.Position = UDim2.new(0, 190, 0, 30);
 		N.Size = UDim2.new(0, 453, 0, 325);
@@ -2404,57 +2407,40 @@ function Kz.CreateMain(Y)
 			(game.TweenService:Create(C, TweenInfo.new(dz.UIColor["Tween Animation 2 Speed"]), { Size = Y })):Play();
 		end);
 		(c:GetPropertyChangedSignal("Text")):Connect(function()
-			local Y = c.Text;
-			if Y == "" then
-				for Y, d in pairs(I:GetChildren()) do
-					if not d:IsA("UIListLayout") then
-						d.Visible = true;
+			local query = tostring(c.Text or ""):lower();
+			if query == "" then
+				-- Local search: restore only this page. Do not switch tabs.
+				for section, controls in pairs(wz) do
+					local tab = dz.listtab[section];
+					if tab and tab[2] == N then
+						section.Visible = true;
+						for _, control in pairs(controls) do control.Visible = true end;
 					end;
 				end;
-				for Y, d in pairs(D:GetChildren()) do
-					if not d:IsA("UIPageLayout") and not d:IsA("UICorner") then
-						d.Visible = true;
-					end;
+				return;
+			end;
+
+			-- Hide controls in this page before applying matches.
+			for section, controls in pairs(wz) do
+				local tab = dz.listtab[section];
+				if tab and tab[2] == N then
+					section.Visible = false;
+					for _, control in pairs(controls) do control.Visible = false end;
 				end;
-				for Y, d in pairs(wz) do
-					Y.Visible = true;
-					for Y, d in pairs(d) do
-						d.Visible = true;
-					end;
-				end;
-			else
-				for Y, d in pairs(wz) do
-					Y.Visible = false;
-					for Y, d in pairs(d) do
-						d.Visible = false;
-					end;
-				end;
-				for Y, d in pairs(I:GetChildren()) do
-					if not d:IsA("UIListLayout") then
-						d.Visible = false;
-					end;
-				end;
-				for Y, d in pairs(D:GetChildren()) do
-					if not d:IsA("UIPageLayout") and not d:IsA("UICorner") then
-						d.Visible = false;
-					end;
-				end;
-				for d, R in pairs(dz.listfunction) do
-					for R, Q in pairs(R) do
-						if string.find(Q.Name:lower(), Y:lower()) then
-							if Q.Call then
-								Q.Call();
-							end;
-							local Y = dz.listtab[d];
-							if Y then
-								Y[1].Visible = true;
-								Y[2].Visible = true;
-								Y[3].Visible = true;
-								local d = dz.UIColor["Tween Animation 1 Speed"];
-								A.TweenTime = 0;
-								A:JumpTo(Y[2]);
-								task.wait();
-								A.TweenTime = d;
+			end;
+
+			for section, items in pairs(dz.listfunction) do
+				local tab = dz.listtab[section];
+				if tab and tab[2] == N then
+					local sectionMatch = string.find(tostring(dz.listsection[section] or ""):lower(), query, 1, true) ~= nil;
+					if sectionMatch then
+						section.Visible = true;
+						for _, control in pairs(wz[section] or {}) do control.Visible = true end;
+					else
+						for _, item in pairs(items) do
+							if string.find(tostring(item.Name or ""):lower(), query, 1, true) then
+								section.Visible = true;
+								if item.Call then item.Call() end;
 							end;
 						end;
 					end;
@@ -2514,6 +2500,7 @@ function Kz.CreateMain(Y)
 			local W = Instance.new("UIListLayout");
 			dz.listtab[w] = { [1] = Q, [2] = N, [3] = w };
 			dz.listfunction[w] = {};
+			dz.listsection[w] = tostring(Y);
 			w.Name = Y .. "_Dot";
 			w.Parent = z;
 			w.Size = UDim2.new(1, -5, 0, 30);
@@ -2694,7 +2681,7 @@ function Kz.CreateMain(Y)
 				n.Name = "check";
 				n.Parent = K;
 				n.AnchorPoint = Vector2.new(.5, .5);
-				n.BackgroundColor3 = Color3.fromRGB(120, 50, 200);
+				n.BackgroundColor3 = Color3.fromRGB(0, 255, 100);
 				n.BackgroundTransparency = 0;
 				n.Position = UDim2.new(.5, 0, .5, 0);
 				n.Size = UDim2.new(0, 0, 0, 0);
@@ -2811,7 +2798,7 @@ function Kz.CreateMain(Y)
 				r.BackgroundTransparency = 1;
 				r.SelectionOrder = 0;
 				r.SizeConstraint = Enum.SizeConstraint.RelativeXY;
-				r.BackgroundColor3 = Color3.fromRGB(120, 50, 200);
+				r.BackgroundColor3 = Color3.fromRGB(0, 255, 100);
 				local a = Instance.new("Frame", r);
 				a.LayoutOrder = 0;
 				a.BorderMode = Enum.BorderMode.Outline;
@@ -2858,7 +2845,7 @@ function Kz.CreateMain(Y)
 				n.Draggable = false;
 				n.RichText = false;
 				n.SelectionOrder = 0;
-				n.BackgroundColor3 = Color3.fromRGB(120, 50, 200);
+				n.BackgroundColor3 = Color3.fromRGB(0, 255, 100);
 				n.BorderMode = Enum.BorderMode.Outline;
 				n.TextStrokeColor3 = Color3.new(0, 0, 0);
 				n.AnchorPoint = Vector2.new(0, 0);
@@ -2892,13 +2879,13 @@ function Kz.CreateMain(Y)
 				I.Style = Enum.FrameStyle.Custom;
 				I.Position = UDim2.new(1, -8, .5, 0);
 				I.SelectionOrder = 0;
-				I.BackgroundColor3 = Color3.fromRGB(120, 50, 200);
+				I.BackgroundColor3 = Color3.fromRGB(0, 255, 100);
 				local W = Instance.new("UICorner", I);
 				W.CornerRadius = UDim.new(0, 12);
 				local N = Instance.new("UIGradient", I);
 				N.Enabled = true;
 				N.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0, 0), NumberSequenceKeypoint.new(1, 0, 0) });
-				N.Color = ColorSequence.new({ ColorSequenceKeypoint.new(.0, Color3.fromRGB(201, 0, 255)), ColorSequenceKeypoint.new(1.0, Color3.fromRGB(201, 0, 255)) });
+				N.Color = ColorSequence.new({ ColorSequenceKeypoint.new(.0, Color3.fromRGB(0, 255, 100)), ColorSequenceKeypoint.new(1.0, Color3.fromRGB(0, 255, 100)) });
 				N.Offset = Vector2.new(0, 0);
 				N.Rotation = 90;
 				local D = Instance.new("TextButton", I);
@@ -2918,7 +2905,7 @@ function Kz.CreateMain(Y)
 				D.SelectionOrder = 0;
 				D.TextYAlignment = Enum.TextYAlignment.Center;
 				D.TextScaled = false;
-				D.BackgroundColor3 = Color3.fromRGB(120, 50, 200);
+				D.BackgroundColor3 = Color3.fromRGB(0, 255, 100);
 				D.BorderMode = Enum.BorderMode.Outline;
 				D.Selectable = true;
 				D.AnchorPoint = Vector2.new(0, 0);
@@ -2988,7 +2975,7 @@ function Kz.CreateMain(Y)
 				g.Position = UDim2.new(.5, 0, .5, 0);
 				g.SliceScale = 1;
 				g.BorderSizePixel = 1;
-				g.BackgroundColor3 = Color3.fromRGB(120, 50, 200);
+				g.BackgroundColor3 = Color3.fromRGB(0, 255, 100);
 				D.MouseButton1Click:Connect(function()
 					Q();
 				end);
@@ -3737,7 +3724,7 @@ function Kz.CreateMain(Y)
 			end;
 			function i.CreateBind(Y, d)
 				local R = tostring(Y.Title) or "";
-				table.insert(dz.listfunction[w], { Type = "Bind", Name = R });
+				table.insert(dz.listfunction[w], { Type = "Bind", Name = R, Call = function() M.Visible = true; end });
 				local Q = Y.Key;
 				local r = Y.Default or Y.Key;
 				local a = (tostring(r)):match("UserInputType") and "UserInputType" or "KeyCode";
@@ -4154,46 +4141,83 @@ function Kz.CreateMain(Y)
 			end;
 		end;
 	(j:GetPropertyChangedSignal("Text")):Connect(function()
-		local Y = j.Text;
-		if Y == "" then
+		local query = tostring(j.Text or ""):lower();
+		if query == "" then
 			az();
-		else
-			for Y, d in pairs(wz) do
-				Y.Visible = false;
-				for Y, d in pairs(d) do
-					d.Visible = false;
-				end;
+			return;
+		end;
+
+		-- Hide everything first; matching tabs/sections/functions are restored below.
+		for _, section in pairs(wz) do
+			section.Visible = false;
+			for _, control in pairs(section) do
+				control.Visible = false;
 			end;
-			for Y, d in pairs(I:GetChildren()) do
-				if not d:IsA("UIListLayout") then
-					d.Visible = false;
-				end;
+		end;
+		for _, tab in pairs(I:GetChildren()) do
+			if not tab:IsA("UIListLayout") then
+				tab.Visible = false;
 			end;
-			for Y, d in pairs(D:GetChildren()) do
-				if not d:IsA("UIPageLayout") and not d:IsA("UICorner") then
-					d.Visible = false;
-				end;
+		end;
+		for _, page in pairs(D:GetChildren()) do
+			if not page:IsA("UIPageLayout") and not page:IsA("UICorner") then
+				page.Visible = false;
 			end;
-			for d, R in pairs(dz.listfunction) do
-				for R, Q in pairs(R) do
-					if string.find(Q.Name:lower(), Y:lower()) then
-						if Q.Call then
-							Q.Call();
-						end;
-						local Y = dz.listtab[d];
-						if Y then
-							Y[1].Visible = true;
-							Y[2].Visible = true;
-							Y[3].Visible = true;
-							local d = dz.UIColor["Tween Animation 1 Speed"];
-							A.TweenTime = 0;
-							A:JumpTo(Y[2]);
-							task.wait();
-							A.TweenTime = d;
-						end;
+		end;
+
+		local firstPage = nil;
+		local function showPage(pageName, showAll)
+			local page = dz.listpage[pageName];
+			if not page then return end;
+			page[1].Visible = true;
+			page[2].Visible = true;
+			if not firstPage then firstPage = page[2] end;
+			if showAll then
+				for section, meta in pairs(dz.listtab) do
+					if meta[2] == page[2] then
+						section.Visible = true;
+						for _, control in pairs(wz[section] or {}) do control.Visible = true end;
 					end;
 				end;
 			end;
+		end;
+
+		-- Search tabs by both Page_Name and Page_Title.
+		for pageName, page in pairs(dz.listpage) do
+			local haystack = (tostring(pageName) .. " " .. tostring(page[4])):lower();
+			if string.find(haystack, query, 1, true) then
+				showPage(pageName, true);
+			end;
+		end;
+
+		-- Search sections and individual controls.
+		for section, items in pairs(dz.listfunction) do
+			local tab = dz.listtab[section];
+			if tab then
+				local pageName = tab[1].Name:gsub("_Control$", "");
+				local sectionMatch = string.find(tostring(dz.listsection[section] or ""):lower(), query, 1, true) ~= nil;
+				if sectionMatch then
+					showPage(pageName, false);
+					section.Visible = true;
+					for _, control in pairs(wz[section] or {}) do control.Visible = true end;
+				else
+					for _, item in pairs(items) do
+						if string.find(tostring(item.Name or ""):lower(), query, 1, true) then
+							showPage(pageName, false);
+							section.Visible = true;
+							if item.Call then item.Call() end;
+						end;
+					end;
+				end;
+				end;
+			end;
+		end;
+
+		if firstPage then
+			local oldTween = A.TweenTime;
+			A.TweenTime = 0;
+			A:JumpTo(firstPage);
+			A.TweenTime = oldTween;
 		end;
 	end);
 	return V;
