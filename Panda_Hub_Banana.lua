@@ -1828,7 +1828,7 @@ local gz = Instance.new("ImageButton", nz.HideGui);
 gz.BorderSizePixel = 0;
 gz.BackgroundColor3 = Color3.fromRGB(255, 255, 255);
 gz.AnchorPoint = Vector2.new(0, 1);
-gz.Image = "rbxassetid://122444592900332";
+gz.Image = "rbxassetid://105848560127717";
 gz.Size = UDim2.new(0, 50, 0, 50);
 gz.BorderColor3 = Color3.fromRGB(0, 0, 0);
 gz.Position = UDim2.new(.01, 0, .99, 0);
@@ -1920,7 +1920,7 @@ local Uz = function(Y)
 		I.BackgroundColor3 = Color3.fromRGB(230, 230, 230);
 		I.BackgroundTransparency = 1.0;
 		I.Size = UDim2.new(1, 0, 1, 0);
-		I.Image = "rbxassetid://129781592728096";
+		I.Image = "rbxassetid://105848560127717";
 		I.ImageRectOffset = Vector2.new(284, 4);
 		I.ImageRectSize = Vector2.new(24, 24);
 		I.ImageColor3 = dz.UIColor["Search Icon Color"];
@@ -4214,13 +4214,14 @@ function Kz.CreateMain(Y)
 	return V;
 end;
 local Cz = Kz.CreateMain({ Desc = "" });
-local vz = Cz.T({ Page_Name = "Farm", Page_Title = "Farm" });
-local mz = Cz.T({ Page_Name = "Config", Page_Title = "Config" });
-local yz = Cz.T({ Page_Name = "Fighting Style", Page_Title = "Fighting Style" });
-local bz = Cz.T({ Page_Name = "Items Farm", Page_Title = "Items Farm" });
+local yz = Cz.T({ Page_Name = "Shop", Page_Title = "Shop" });
+local Status = Cz.T({ Page_Name = "Status and Server", Page_Title = " Status and Server"}) ;
+local mz = Cz.T({ Page_Name = "Setting Hold Skill", Page_Title = "Setting Hold Skill" });
+local vz = Cz.T({ Page_Name = "Farming", Page_Title = "Farming" });
+local bz = Cz.T({ Page_Name = "Stack Farm", Page_Title = "Stack Farm" });
 local cz = Cz.T({ Page_Name = "Sea Events", Page_Title = "Sea Events" });
 local Hz = Cz.T({ Page_Name = "Mirage + RaceV4", Page_Title = "Mirage + RaceV4" });
-local Sz = Cz.T({ Page_Name = "Drago Dojo", Page_Title = "Drago Dojo" });
+local Sz = Cz.T({ Page_Name = "Dragon Dojo", Page_Title = "Drago Dojo" });
 local oz = Cz.T({ Page_Name = "Prehistoric", Page_Title = "Prehistoric" });
 local Zz = Cz.T({ Page_Name = "Raid", Page_Title = "Raid" });
 local Tz = Cz.T({ Page_Name = "Combat PVP", Page_Title = "Combat PVP" });
@@ -4228,6 +4229,19 @@ local kz = Cz.T({ Page_Name = "Teleport", Page_Title = "Teleport" });
 local Lz = Cz.T({ Page_Name = "Fruits", Page_Title = "Fruits" });
 local Pz = Cz.T({ Page_Name = "Shop", Page_Title = "Shop" });
 local jz = Cz.T({ Page_Name = "Misc", Page_Title = "Misc" });
+local XF = cz.CreateSection("Kitsune Island / Event");
+
+local IslandStatus = Status.CreateSection("Status Island / Boss");
+local Kitsune = IslandStatus.CreateLabel({ Title = " Kitsune Island Status ", Content = "" });
+spawn(function()
+	while wait(.2) do
+		if workspace.Map:FindFirstChild("KitsuneIsland") or workspace._WorldOrigin.Locations:FindFirstChild("Kitsune Island") then
+			hF:SetDesc(" Kitsune Island : True");
+		else
+			hF:SetDesc(" Kitsune Island : False");
+		end;
+	end;
+end);
 local Gz = vz.CreateSection("Farm");
 Gz.CreateToggle({
 	Title = "Auto Farm Level",
